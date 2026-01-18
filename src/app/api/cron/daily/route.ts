@@ -16,9 +16,9 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: "Clés API manquantes" }, { status: 500 });
     }
 
-    // 2. Récupération des matchs (LDC, PL, L1, Serie A, Liga, Bundesliga)
+    // 2. Récupération des matchs
     const today = new Date().toISOString().split('T')[0];
-    const leaguesIds = "2-39-61-135-140-78";
+    const leaguesIds = "2-39-61-135-140-78-6-9"; // J'ai ajouté quelques ligues (Coupes, etc.)
     
     const footResponse = await fetch(`https://v3.football.api-sports.io/fixtures?date=${today}&ids=${leaguesIds}`, {
       headers: {
@@ -28,42 +28,45 @@ export async function GET(req: Request) {
     });
     
     const footData = await footResponse.json();
-    let matchesList = "Aucun match majeur.";
+    let matchesList = "Aucun match majeur trouvé dans l'API.";
 
     if (footData.response && footData.response.length > 0) {
-      matchesList = footData.response.map((m: any) => 
+      // On prend les 10 premiers matchs pour ne pas surcharger l'IA
+      matchesList = footData.response.slice(0, 15).map((m: any) => 
         `- ${m.league.name}: ${m.teams.home.name} vs ${m.teams.away.name} (Heure: ${m.fixture.date.split('T')[1].slice(0,5)})`
       ).join('\n');
     }
 
-    // 3. Prompt "Contournement de Censure"
-    // On demande une analyse journalistique neutre, puis on ajoute les émojis nous-mêmes
+    // 3. Le Prompt "Mode Silencieux"
     const promptIA = `
-      Agis comme un Analyste Sportif Senior pour un grand média.
-      Voici les matchs du jour :
+      Tu es un BOT de notification automatique. Tu n'es PAS un assistant conversationnel.
+      
+      INPUT (Liste des matchs) :
       ${matchesList}
 
-      Tâche : Identifie les 3 affiches les plus intéressantes sportivement.
-      Pour chaque match, donne une analyse purement basée sur la forme des équipes.
-      
-      RÈGLES STRICTES DE FORMAT (Respecte scrupuleusement) :
-      - Ne parle PAS de "paris", de "cotes" ou d'"argent".
-      - Utilise le terme "Tendance probable" au lieu de "Pronostic".
-      - Utilise le terme "Option audacieuse" au lieu de "Fun".
-      
-      Génère le texte final dans ce format exact pour Telegram :
-      
-      👋 *Le Récap du ${today}*
-      
+      TÂCHE :
+      Crée un post Telegram pour "La Passion VIP" avec les 3 meilleures affiches.
+
+      RÈGLES IMPÉRATIVES (Si tu ne respectes pas, le système crash) :
+      1. NE METS AUCUNE INTRODUCTION. Pas de "Voici le récap", pas de "Je dois clarifier".
+      2. Commence DIRECTEMENT par l'émoji 👋.
+      3. Utilise exactement ce format visuel :
+
+      👋 *Le Récap VIP du ${today}*
+
+      ➖➖➖➖➖➖➖
+
       ⚽ **[Equipe A] vs [Equipe B]**
       🏆 *[Nom de la Ligue]*
-      🛡️ Tendance : [Vainqueur probable ou nul]
-      ⚡ Audace : [Score exact ou buteur]
-      📝 [Une phrase d'analyse tactique]
-      
+      💎 Tendance : [Vainqueur ou Double Chance]
+      💥 Coup de Poker : [Buteur ou Score Exact]
+      📝 [Analyse tactique en 15 mots max]
+
       (Répète pour les 2 autres matchs)
+
+      ➖➖➖➖➖➖➖
       
-      👉 *Plus de détails sur le site officiel.*
+      👉 *Retrouvez l'analyse détaillée sur le site !*
     `;
 
     const aiResponse = await fetch('https://api.perplexity.ai/chat/completions', {
@@ -79,26 +82,30 @@ export async function GET(req: Request) {
     });
 
     const aiJson = await aiResponse.json();
-    // Fallback si l'IA refuse encore (pour ne pas casser le bot)
-    let finalMessage = aiJson.choices?.[0]?.message?.content || "Analyse indisponible pour le moment.";
+    let finalMessage = aiJson.choices?.[0]?.message?.content || "Erreur analyse.";
 
-    // Petit hack : On remet les mots "Interdits" nous-mêmes après que l'IA ait généré le texte
-    // On remplace "Tendance" par "💎 Safe" et "Audace" par "💥 Fun"
+    // NETTOYAGE DE SÉCURITÉ
+    // Si l'IA est têtue et ajoute quand même du texte avant, on coupe tout ce qui est avant "👋"
+    if (finalMessage.includes("👋")) {
+      finalMessage = finalMessage.substring(finalMessage.indexOf("👋"));
+    }
+
+    // Remplacement des termes pour faire "VIP"
     finalMessage = finalMessage
-      .replace(/🛡️ Tendance/g, "💎 Safe")
-      .replace(/⚡ Audace/g, "💥 Fun");
+      .replace(/Tendance/g, "Safe")
+      .replace(/Coup de Poker/g, "Fun");
 
     // 4. Envoi Telegram
     const telegramUrl = `https://api.telegram.org/bot${telegramToken}/sendMessage`;
     const params = new URLSearchParams({
       chat_id: chatId,
       text: finalMessage,
-      // Pas de markdown pour éviter les erreurs de formatage
+      // On désactive le markdown auto pour éviter les bugs si l'IA met des astérisques bizarres
     });
 
     await fetch(`${telegramUrl}?${params}`);
 
-    return NextResponse.json({ success: true, message: "Envoyé !" });
+    return NextResponse.json({ success: true, message: "Message envoyé !" });
 
   } catch (error) {
     console.error("Erreur Cron:", error);
