@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+export const dynamic = 'force-dynamic';
 import { Match, LeagueGroup, DateFilter } from '@/types'
 import { getTodayMatches, getPriorityMatches } from '@/services/football'
 
