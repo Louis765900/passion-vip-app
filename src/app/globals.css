@@ -1,0 +1,76 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+:root {
+  --neon-green: #39ff14;
+  --dark-bg: #0a0a0a;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #39ff14 #1a1a1a;
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: #1a1a1a;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #39ff14, #32e010);
+  border-radius: 4px;
+}
+
+body {
+  background: linear-gradient(135deg, #0a0a0a 0%, #121212 50%, #0a0a0a 100%);
+  min-height: 100vh;
+}
+
+@layer utilities {
+  .text-gradient-neon {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-neon-green to-green-400;
+  }
+
+  .border-neon {
+    @apply border-neon-green/30 hover:border-neon-green/60 transition-colors;
+  }
+
+  .glass-card {
+    @apply bg-dark-700/50 backdrop-blur-md border border-white/5;
+  }
+
+  .skeleton-shimmer {
+    @apply bg-gradient-to-r from-dark-600 via-dark-500 to-dark-600 bg-[length:200%_100%] animate-shimmer;
+  }
+}
+
+/* League gradient backgrounds */
+.league-ligue1 {
+  background: linear-gradient(135deg, #091c3e 0%, #0d2a5c 100%);
+}
+
+.league-premier {
+  background: linear-gradient(135deg, #3d195b 0%, #5c2889 100%);
+}
+
+.league-champions {
+  background: linear-gradient(135deg, #1a0d33 0%, #2d1a4d 100%);
+}
+
+.league-laliga {
+  background: linear-gradient(135deg, #ff4b44 0%, #ff6b63 100%);
+}
+
+.league-seriea {
+  background: linear-gradient(135deg, #024494 0%, #0356b6 100%);
+}
+
+.league-bundesliga {
+  background: linear-gradient(135deg, #d20515 0%, #e82535 100%);
+}

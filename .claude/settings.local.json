@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(npm run build:*)",
+      "Bash(ls \"c:\\\\Users\\\\louis\\\\Documents\\\\web-app\\\\src\\\\data\"\" 2>/dev/null || echo \"data folder empty or not exists \")"
+    ]
+  }
+}
