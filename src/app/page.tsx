@@ -190,20 +190,20 @@ export default function Dashboard() {
       />
       <Header />
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-6 md:py-8">
         {/* Hero Section */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-8"
+          className="text-center mb-6 md:mb-8"
         >
-          <div className="flex items-center justify-center gap-3 mb-3">
-            <Trophy className="w-8 h-8 text-neon-green" />
-            <h1 className="text-3xl md:text-4xl font-bold text-white">
+          <div className="flex items-center justify-center gap-2 md:gap-3 mb-2 md:mb-3">
+            <Trophy className="w-6 h-6 md:w-8 md:h-8 text-neon-green" />
+            <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white">
               La Passion <span className="text-neon-green">VIP</span>
             </h1>
           </div>
-          <p className="text-white/60 max-w-2xl mx-auto">
+          <p className="text-sm md:text-base text-white/60 max-w-2xl mx-auto px-2">
             Analyses professionnelles et pronostics VIP generes par IA.
             Tickets SAFE et FUN avec gestion de bankroll integree.
           </p>
@@ -213,16 +213,16 @@ export default function Dashboard() {
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8"
+          className="flex flex-col items-center gap-3 md:gap-4 mb-6 md:mb-8"
         >
-          {/* Date Filter Tabs */}
-          <div className="flex items-center gap-2 bg-dark-700 rounded-xl p-1">
+          {/* Date Filter Tabs - Full width on mobile */}
+          <div className="w-full md:w-auto flex items-center justify-center gap-1 md:gap-2 bg-dark-700 rounded-xl p-1">
             {dateFilters.map((filter) => (
               <button
                 key={filter.id}
                 onClick={() => handleDateChange(filter.id)}
                 className={`
-                  px-4 py-2 rounded-lg text-sm font-medium transition-all
+                  flex-1 md:flex-none px-3 md:px-4 py-2.5 md:py-2 rounded-lg text-sm font-medium transition-all
                   ${selectedDate === filter.id
                     ? 'bg-neon-green text-dark-900'
                     : 'text-white/70 hover:text-white hover:bg-dark-600'
@@ -234,45 +234,49 @@ export default function Dashboard() {
             ))}
           </div>
 
-          {/* Sniper Mode Toggle */}
-          <motion.button
-            onClick={() => setSniperMode(!sniperMode)}
-            className={`
-              flex items-center gap-2 px-4 py-2 rounded-xl font-medium text-sm transition-all
-              ${sniperMode
-                ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg shadow-orange-500/25'
-                : 'bg-dark-700 text-white/70 hover:text-white hover:bg-dark-600'
-              }
-            `}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-          >
-            <Crosshair className={`w-4 h-4 ${sniperMode ? 'animate-pulse' : ''}`} />
-            Mode Sniper
-            {sniperMatchCount > 0 && (
-              <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
-                sniperMode ? 'bg-white/20' : 'bg-neon-green/20 text-neon-green'
-              }`}>
-                {sniperMatchCount}
-              </span>
-            )}
-          </motion.button>
-
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 px-4 py-2 bg-dark-700/50 rounded-lg">
-              <Calendar className="w-4 h-4 text-neon-green" />
-              <span className="text-sm text-white/70 capitalize">{getDateLabel()}</span>
-            </div>
-
-            <button
-              onClick={handleRefresh}
-              disabled={isLoadingMatches}
-              className="flex items-center gap-2 px-4 py-2 bg-dark-700 hover:bg-dark-600 rounded-lg transition-colors disabled:opacity-50"
+          {/* Second row: Sniper + Date + Refresh */}
+          <div className="w-full md:w-auto flex flex-col sm:flex-row items-center justify-center gap-3">
+            {/* Sniper Mode Toggle */}
+            <motion.button
+              onClick={() => setSniperMode(!sniperMode)}
+              className={`
+                w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-3 md:py-2 rounded-xl font-medium text-sm transition-all
+                ${sniperMode
+                  ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg shadow-orange-500/25'
+                  : 'bg-dark-700 text-white/70 hover:text-white hover:bg-dark-600'
+                }
+              `}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
             >
-              <RefreshCw
-                className={`w-4 h-4 text-white/70 ${isLoadingMatches ? 'animate-spin' : ''}`}
-              />
-            </button>
+              <Crosshair className={`w-5 h-5 md:w-4 md:h-4 ${sniperMode ? 'animate-pulse' : ''}`} />
+              Mode Sniper
+              {sniperMatchCount > 0 && (
+                <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+                  sniperMode ? 'bg-white/20' : 'bg-neon-green/20 text-neon-green'
+                }`}>
+                  {sniperMatchCount}
+                </span>
+              )}
+            </motion.button>
+
+            {/* Date display + Refresh */}
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <div className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-3 md:py-2 bg-dark-700/50 rounded-lg">
+                <Calendar className="w-4 h-4 text-neon-green" />
+                <span className="text-sm text-white/70 capitalize">{getDateLabel()}</span>
+              </div>
+
+              <button
+                onClick={handleRefresh}
+                disabled={isLoadingMatches}
+                className="flex items-center justify-center p-3 md:p-2 bg-dark-700 hover:bg-dark-600 rounded-lg transition-colors disabled:opacity-50 min-w-[44px] min-h-[44px] md:min-w-0 md:min-h-0"
+              >
+                <RefreshCw
+                  className={`w-5 h-5 md:w-4 md:h-4 text-white/70 ${isLoadingMatches ? 'animate-spin' : ''}`}
+                />
+              </button>
+            </div>
           </div>
         </motion.div>
 
@@ -283,27 +287,27 @@ export default function Dashboard() {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="mb-6"
+              className="mb-4 md:mb-6"
             >
-              <div className="p-4 bg-gradient-to-r from-orange-500/10 to-red-500/10 border border-orange-500/30 rounded-xl">
-                <div className="flex items-center gap-3 mb-2">
-                  <Crosshair className="w-5 h-5 text-orange-400" />
-                  <h3 className="font-semibold text-white">Mode Sniper Active</h3>
+              <div className="p-3 md:p-4 bg-gradient-to-r from-orange-500/10 to-red-500/10 border border-orange-500/30 rounded-xl">
+                <div className="flex items-center gap-2 md:gap-3 mb-2">
+                  <Crosshair className="w-4 h-4 md:w-5 md:h-5 text-orange-400" />
+                  <h3 className="text-sm md:text-base font-semibold text-white">Mode Sniper Active</h3>
                 </div>
-                <p className="text-sm text-white/70 mb-3">
+                <p className="text-xs md:text-sm text-white/70 mb-3">
                   Seuls les matchs analyses avec une Value (EV) &gt; 5% ou une Confiance &gt; 80% sont affiches.
                   Analysez des matchs pour decouvrir les pepites !
                 </p>
-                <div className="flex items-center gap-4 text-xs">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 text-xs">
                   <div className="flex items-center gap-2">
-                    <div className="flex items-center gap-1 px-2 py-1 bg-orange-500/90 rounded-full">
+                    <div className="flex items-center gap-1 px-2 py-1.5 md:py-1 bg-orange-500/90 rounded-full">
                       <Flame className="w-3 h-3 text-white" />
                       <span className="font-bold text-white">VALUE</span>
                     </div>
                     <span className="text-white/50">= EV &gt; 5%</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="flex items-center gap-1 px-2 py-1 bg-blue-500/90 rounded-full">
+                    <div className="flex items-center gap-1 px-2 py-1.5 md:py-1 bg-blue-500/90 rounded-full">
                       <Gem className="w-3 h-3 text-white" />
                       <span className="font-bold text-white">SAFE</span>
                     </div>
@@ -319,24 +323,24 @@ export default function Dashboard() {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="flex items-center justify-center gap-6 mb-8"
+          className="flex flex-wrap items-center justify-center gap-3 md:gap-6 mb-6 md:mb-8 px-2"
         >
           <div className="flex items-center gap-2">
-            <div className="w-2 h-2 bg-neon-green rounded-full animate-pulse" />
-            <span className="text-sm text-white/60">
+            <div className="w-2 h-2 bg-neon-green rounded-full animate-pulse flex-shrink-0" />
+            <span className="text-xs md:text-sm text-white/60">
               {sniperMode ? filteredLeagues.reduce((acc, l) => acc + l.matches.length, 0) : totalMatches} match{totalMatches !== 1 ? 's' : ''} {sniperMode ? 'detecte(s)' : 'disponible(s)'}
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-2 h-2 bg-blue-400 rounded-full" />
-            <span className="text-sm text-white/60">
+            <div className="w-2 h-2 bg-blue-400 rounded-full flex-shrink-0" />
+            <span className="text-xs md:text-sm text-white/60">
               {sniperMode ? filteredLeagues.length : leagues.length} competition{leagues.length !== 1 ? 's' : ''}
             </span>
           </div>
           {analyzedMatches.size > 0 && (
             <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-purple-400 rounded-full" />
-              <span className="text-sm text-white/60">
+              <div className="w-2 h-2 bg-purple-400 rounded-full flex-shrink-0" />
+              <span className="text-xs md:text-sm text-white/60">
                 {analyzedMatches.size} analyse(s)
               </span>
             </div>
@@ -350,45 +354,45 @@ export default function Dashboard() {
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-xl flex items-center gap-3"
+              className="mb-4 md:mb-6 p-3 md:p-4 bg-red-500/10 border border-red-500/30 rounded-xl flex items-start md:items-center gap-3"
             >
-              <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0" />
-              <p className="text-red-300 text-sm">{matchesError || pronosticError}</p>
+              <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5 md:mt-0" />
+              <p className="text-red-300 text-xs md:text-sm">{matchesError || pronosticError}</p>
             </motion.div>
           )}
         </AnimatePresence>
 
         {/* Loading State */}
         {isLoadingMatches ? (
-          <div className="flex flex-col items-center justify-center py-20">
+          <div className="flex flex-col items-center justify-center py-12 md:py-20 px-4">
             <motion.div
               animate={{ rotate: 360 }}
               transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
               className="mb-4"
             >
-              <Loader2 className="w-12 h-12 text-neon-green" />
+              <Loader2 className="w-10 h-10 md:w-12 md:h-12 text-neon-green" />
             </motion.div>
-            <p className="text-white/60 text-sm">Recherche des matchs via Perplexity AI...</p>
-            <p className="text-white/40 text-xs mt-2">Cela peut prendre quelques secondes</p>
+            <p className="text-white/60 text-xs md:text-sm text-center">Recherche des matchs via Perplexity AI...</p>
+            <p className="text-white/40 text-xs mt-2 text-center">Cela peut prendre quelques secondes</p>
           </div>
         ) : filteredLeagues.length === 0 ? (
           /* Empty State */
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-center py-20"
+            className="text-center py-12 md:py-20 px-4"
           >
-            <div className="w-20 h-20 mx-auto mb-6 bg-dark-700 rounded-full flex items-center justify-center">
+            <div className="w-16 h-16 md:w-20 md:h-20 mx-auto mb-4 md:mb-6 bg-dark-700 rounded-full flex items-center justify-center">
               {sniperMode ? (
-                <Crosshair className="w-10 h-10 text-orange-400/50" />
+                <Crosshair className="w-8 h-8 md:w-10 md:h-10 text-orange-400/50" />
               ) : (
-                <Calendar className="w-10 h-10 text-white/30" />
+                <Calendar className="w-8 h-8 md:w-10 md:h-10 text-white/30" />
               )}
             </div>
-            <h3 className="text-xl font-semibold text-white mb-2">
+            <h3 className="text-lg md:text-xl font-semibold text-white mb-2">
               {sniperMode ? 'Aucune pepite detectee' : 'Aucun match disponible'}
             </h3>
-            <p className="text-white/50 max-w-md mx-auto">
+            <p className="text-sm md:text-base text-white/50 max-w-md mx-auto">
               {sniperMode
                 ? 'Analysez des matchs pour decouvrir les meilleures opportunites. Les matchs avec EV > 5% ou Confiance >= 80% apparaitront ici.'
                 : 'Il n\'y a pas de match programme pour cette date dans les ligues majeures. Essayez une autre date ou revenez plus tard.'
@@ -397,7 +401,7 @@ export default function Dashboard() {
             {sniperMode && (
               <button
                 onClick={() => setSniperMode(false)}
-                className="mt-4 px-4 py-2 bg-dark-700 hover:bg-dark-600 text-white/70 hover:text-white rounded-lg transition-colors text-sm"
+                className="mt-4 px-4 py-3 md:py-2 bg-dark-700 hover:bg-dark-600 text-white/70 hover:text-white rounded-lg transition-colors text-sm min-h-[44px]"
               >
                 Desactiver le Mode Sniper
               </button>
@@ -405,7 +409,7 @@ export default function Dashboard() {
           </motion.div>
         ) : (
           /* Leagues */
-          <div className="space-y-10">
+          <div className="space-y-6 md:space-y-10">
             {filteredLeagues.map((leagueData) => (
               <LeagueSection
                 key={leagueData.league}
@@ -424,15 +428,15 @@ export default function Dashboard() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
-          className="mt-16 pt-8 border-t border-white/10 text-center"
+          className="mt-10 md:mt-16 pt-6 md:pt-8 border-t border-white/10 text-center px-2"
         >
-          <div className="flex items-center justify-center gap-2 mb-3">
-            <Trophy className="w-4 h-4 text-neon-green" />
-            <span className="text-sm text-white/50">
+          <div className="flex items-center justify-center gap-2 mb-2 md:mb-3">
+            <Trophy className="w-4 h-4 text-neon-green flex-shrink-0" />
+            <span className="text-xs md:text-sm text-white/50">
               La Passion VIP - Propulse par Perplexity AI
             </span>
           </div>
-          <p className="text-xs text-white/30 max-w-lg mx-auto">
+          <p className="text-[10px] md:text-xs text-white/30 max-w-lg mx-auto leading-relaxed">
             Les pronostics sont fournis a titre indicatif uniquement.
             Pariez de maniere responsable. Ne misez jamais plus que ce que vous pouvez vous permettre de perdre.
           </p>
