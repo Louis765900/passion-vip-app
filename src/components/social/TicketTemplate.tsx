@@ -114,7 +114,7 @@ export const TicketTemplate = forwardRef<HTMLDivElement, TicketTemplateProps>(
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <Trophy style={{ width: 24, height: 24, color: '#39ff14' }} />
             <span style={{ color: 'white', fontWeight: 'bold', fontSize: 18 }}>
-              La Passion VIP
+              PronoScope
             </span>
           </div>
           <span
@@ -305,7 +305,7 @@ export const TicketTemplate = forwardRef<HTMLDivElement, TicketTemplateProps>(
           }}
         >
           <p style={{ color: 'rgba(255, 255, 255, 0.3)', fontSize: 10, margin: 0 }}>
-            Genere par La Passion VIP - Pariez responsablement
+            Genere par PronoScope - Pariez responsablement
           </p>
         </div>
       </div>

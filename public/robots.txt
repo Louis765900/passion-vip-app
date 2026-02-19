@@ -1,0 +1,25 @@
+# *
+User-agent: *
+Allow: /
+
+# *
+User-agent: *
+Disallow: /dashboard
+
+# *
+User-agent: *
+Disallow: /admin
+
+# *
+User-agent: *
+Disallow: /mes-paris
+
+# *
+User-agent: *
+Disallow: /api
+
+# Host
+Host: https://pronoscope.vercel.app
+
+# Sitemaps
+Sitemap: https://pronoscope.vercel.app/sitemap.xml

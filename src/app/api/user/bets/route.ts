@@ -140,7 +140,14 @@ export async function POST(req: NextRequest) {
     // Mettre a jour la bankroll (deduire la mise)
     const currentBankroll = await redis.get(`user:${userEmail}:bankroll`)
     const bankroll = currentBankroll ? parseFloat(String(currentBankroll)) : 100
-    await redis.set(`user:${userEmail}:bankroll`, bankroll - newBet.stake)
+    const newBankroll = Math.round((bankroll - newBet.stake) * 100) / 100
+    await redis.set(`user:${userEmail}:bankroll`, newBankroll)
+
+    // Enregistrer l'historique de la bankroll
+    await redis.lpush(`user:${userEmail}:bankroll:history`, JSON.stringify({
+      date: new Date().toISOString().split('T')[0],
+      bankroll: newBankroll
+    }))
 
     console.log(`[USER BETS] New bet created for ${userEmail}: ${newBet.homeTeam} vs ${newBet.awayTeam}`)
 

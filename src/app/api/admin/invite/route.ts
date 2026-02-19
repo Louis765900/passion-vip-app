@@ -45,7 +45,7 @@ export async function POST(req: Request) {
     // Fallback si host est null (cas très rare)
     const baseUrl = host
       ? `${protocol}://${host}`
-      : 'https://pronosport-vip-kh2g.vercel.app';
+      : 'https://pronoscope.vercel.app';
 
     const link = `${baseUrl}/join?token=${token}`;
 

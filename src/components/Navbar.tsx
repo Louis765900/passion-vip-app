@@ -51,7 +51,7 @@ export function Navbar({ isLoggedIn, isAdmin, userRole }: NavbarProps) {
   };
 
   const navLinks = [
-    { href: '/', label: 'Accueil', icon: Home },
+    { href: '/dashboard', label: 'Accueil', icon: Home },
     { href: '/matchs', label: 'Combinées VIP', icon: Trophy },
     // Mes Paris - visible uniquement pour VIP et Admin
     ...(userRole === 'vip' || userRole === 'admin'
@@ -80,12 +80,12 @@ export function Navbar({ isLoggedIn, isAdmin, userRole }: NavbarProps) {
       <div className="max-w-7xl mx-auto px-4 md:px-6">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-3">
+          <Link href="/dashboard" className="flex items-center gap-3">
             <motion.div
               whileHover={{ scale: 1.05 }}
               className="relative"
             >
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-yellow-600 flex items-center justify-center">
                 <Trophy className="w-5 h-5 text-white" />
               </div>
               {isAdmin && (
@@ -100,7 +100,7 @@ export function Navbar({ isLoggedIn, isAdmin, userRole }: NavbarProps) {
             </motion.div>
             <div className="hidden sm:block">
               <h1 className="text-lg font-bold text-white">
-                Pronosport<span className="text-green-400">VIP</span>
+                Prono<span className="text-amber-400">Scope</span>
               </h1>
               <p className="text-[10px] text-gray-500 -mt-0.5">Powered by AI</p>
             </div>
@@ -117,7 +117,7 @@ export function Navbar({ isLoggedIn, isAdmin, userRole }: NavbarProps) {
                   className={`
                     flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all
                     ${isActive
-                      ? 'bg-green-500/10 text-green-400'
+                      ? 'bg-amber-500/10 text-amber-400'
                       : 'text-gray-400 hover:text-white hover:bg-white/5'
                     }
                   `}
@@ -172,7 +172,7 @@ export function Navbar({ isLoggedIn, isAdmin, userRole }: NavbarProps) {
             ) : (
               <Link
                 href="/login"
-                className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg text-sm font-semibold transition-colors"
+                className="flex items-center gap-2 px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-sm font-semibold transition-colors"
               >
                 <LogIn className="w-4 h-4" />
                 <span className="hidden sm:inline">Connexion</span>
@@ -209,7 +209,7 @@ export function Navbar({ isLoggedIn, isAdmin, userRole }: NavbarProps) {
                       className={`
                         flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all
                         ${isActive
-                          ? 'bg-green-500/10 text-green-400'
+                          ? 'bg-amber-500/10 text-amber-400'
                           : 'text-gray-400 hover:text-white hover:bg-white/5'
                         }
                       `}

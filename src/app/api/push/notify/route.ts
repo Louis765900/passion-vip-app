@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
 
     // Preparer le payload
     const payload = JSON.stringify({
-      title: title || 'Pronosport VIP',
+      title: title || 'PronoScope',
       body: body || 'Nouvelle notification',
       url: url || '/mes-paris',
       betId: betId

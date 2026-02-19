@@ -47,7 +47,7 @@ export function useSyncedBankroll() {
 
       if (!response.ok) {
         if (response.status === 401) {
-          setState(prev => ({ ...prev, isLoading: false, error: 'Non connecte' }))
+          setState(prev => ({ ...prev, isLoading: false, error: null }))
           return
         }
         throw new Error('Erreur lors du chargement des paris')
@@ -67,14 +67,38 @@ export function useSyncedBankroll() {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue'
       setState(prev => ({ ...prev, isLoading: false, error: errorMessage }))
-      console.error('[SyncedBankroll] Fetch error:', errorMessage)
+      // Silent error - don't spam console
     }
   }, [])
 
-  // Charger au montage
-  useEffect(() => {
-    fetchBets()
+  // Verifier automatiquement les paris en cours puis recharger
+  const checkPendingBets = useCallback(async () => {
+    try {
+      const checkResponse = await fetch('/api/user/bets/check', { method: 'POST' })
+      if (checkResponse.ok) {
+        const result = await checkResponse.json()
+        if (result.updated > 0) {
+          console.log(`[SyncedBankroll] ${result.updated} paris mis a jour automatiquement`)
+          // Recharger les paris apres mise a jour
+          await fetchBets()
+          return true
+        }
+      }
+    } catch (error) {
+      // Silent error
+    }
+    return false
   }, [fetchBets])
+
+  // Charger au montage puis auto-verifier les paris en cours
+  useEffect(() => {
+    async function init() {
+      await fetchBets()
+      // Verifier les paris en cours apres le chargement initial
+      await checkPendingBets()
+    }
+    init()
+  }, [fetchBets, checkPendingBets])
 
   // Placer un nouveau pari
   const placeBet = useCallback(async (betData: Partial<ServerBet>): Promise<ServerBet | null> => {
@@ -182,7 +206,6 @@ export function useSyncedBankroll() {
       const data = await response.json()
       return data || []
     } catch (error) {
-      console.error('[SyncedBankroll] Bankroll history error:', error)
       return []
     }
   }, [])
@@ -196,6 +219,7 @@ export function useSyncedBankroll() {
     getBetsByStatus,
     calculateROI,
     getBankrollHistory,
+    checkPendingBets,
     roi: calculateROI()
   }
 }

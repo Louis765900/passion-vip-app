@@ -4,9 +4,17 @@ import type { NextRequest } from 'next/server';
 
 // Routes publiques (pas besoin d'authentification)
 const PUBLIC_ROUTES = [
+  '/',              // Landing page publique
   '/login',
   '/join',          // Page d'invitation VIP (accessible sans connexion)
-  '/vip',           // Page de vente accessible à tous
+  '/vip',           // Page de presentation accessible à tous
+  '/pronostics',    // Track record public
+  '/a-propos',      // Page A propos
+  '/blog',          // Blog et articles (SEO)
+  '/mentions-legales',
+  '/cgu',
+  '/confidentialite',
+  '/jeu-responsable',
   '/api/auth',      // Endpoints d'authentification
   '/api/cron',      // CRON jobs automatiques
   '/api/stats',     // Stats publiques pour la page VIP

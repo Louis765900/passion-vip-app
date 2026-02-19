@@ -62,17 +62,17 @@ const BankrollChart = () => {
                     <Tooltip
                         contentStyle={{ backgroundColor: '#1a202c', border: '1px solid #4a5568', borderRadius: '6px', color: '#cbd5e0' }}
                         labelStyle={{ color: '#a0aec0', fontWeight: 'bold' }}
-                        formatter={(value: number | undefined, name: string) => [value ? value.toFixed(2) + '€' : 'N/A', name]}
+                        formatter={(value: number | string | undefined, name?: string) => [typeof value === 'number' ? value.toFixed(2) + '\u20AC' : 'N/A', name || '']}
                     />
                     <Legend wrapperStyle={{ paddingTop: '10px' }} />
                     <Line 
                         type="monotone" 
                         dataKey="bankroll" 
                         name="Bankroll" 
-                        stroke="#48bb78" // Green line
+                        stroke="#F59E0B" // Amber/gold line
                         strokeWidth={2}
-                        activeDot={{ r: 8, fill: '#48bb78' }} 
-                        dot={{ r: 4, fill: '#48bb78' }}
+                        activeDot={{ r: 8, fill: '#F59E0B' }}
+                        dot={{ r: 4, fill: '#F59E0B' }}
                     />
                 </LineChart>
             </ResponsiveContainer>

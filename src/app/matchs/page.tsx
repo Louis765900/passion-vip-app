@@ -3,6 +3,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import Image from "next/image";
 import {
   Trophy,
   Shield,
@@ -20,7 +21,8 @@ import {
   Zap,
   Target,
   Crown,
-  Loader2
+  Loader2,
+  ChevronRight
 } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 
@@ -105,12 +107,12 @@ ${matchesText}
 ${combine.analysis || "Combiné étudié avec soin par notre IA."}
 
 ━━━━━━━━━━━━━━━
-🏆 *PronosportVIP* - La Passion du Pari
+🏆 *PronoScope* - Pronostics IA
     `.trim();
 
     // Encoder pour l'URL Telegram
     const encodedMessage = encodeURIComponent(message);
-    const telegramUrl = `https://t.me/share/url?url=${encodeURIComponent("https://pronosport-vip.vercel.app")}&text=${encodedMessage}`;
+    const telegramUrl = `https://t.me/share/url?url=${encodeURIComponent("https://pronoscope.vercel.app")}&text=${encodedMessage}`;
 
     window.open(telegramUrl, "_blank");
   };
@@ -159,60 +161,96 @@ ${combine.analysis || "Combiné étudié avec soin par notre IA."}
     <div className="min-h-screen bg-gray-950">
       <Navbar isLoggedIn={isLoggedIn} isAdmin={isAdmin} userRole={userRole as any} />
 
-      {/* Hero Section */}
-      <div className="relative overflow-hidden">
-        {/* Animated Background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/10 via-transparent to-orange-500/10" />
-        <div className="absolute top-20 left-10 w-72 h-72 bg-yellow-500/20 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-10 right-10 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl animate-pulse delay-1000" />
+      {/* Hero Section with Football Background */}
+      <div className="relative overflow-hidden min-h-[500px] flex items-center">
+        {/* Background Image */}
+        <div className="absolute inset-0">
+          <Image
+            src="https://images.unsplash.com/photo-1579952363873-27f3bade9f55?w=1920&q=80"
+            alt="Football stadium"
+            fill
+            className="object-cover"
+            priority
+          />
+          {/* Dark overlay with gradient */}
+          <div className="absolute inset-0 bg-gradient-to-b from-gray-950/70 via-gray-950/80 to-gray-950" />
+          {/* Animated orbs */}
+          <div className="absolute top-20 left-10 w-72 h-72 bg-amber-500/20 rounded-full blur-3xl animate-pulse" />
+          <div className="absolute bottom-10 right-10 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl animate-pulse delay-1000" />
+        </div>
 
-        <div className="relative max-w-7xl mx-auto px-4 md:px-6 py-12 md:py-16">
+        <div className="relative max-w-7xl mx-auto px-4 md:px-6 py-16">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="text-center"
           >
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-yellow-500/10 border border-yellow-500/30 rounded-full mb-6">
-              <Sparkles className="w-4 h-4 text-yellow-400" />
-              <span className="text-yellow-400 text-sm font-semibold">Analysé par Perplexity AI</span>
-            </div>
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.2 }}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-amber-500/20 border border-amber-500/40 rounded-full mb-6 backdrop-blur-sm"
+            >
+              <Sparkles className="w-4 h-4 text-amber-400" />
+              <span className="text-amber-400 text-sm font-semibold">Analysé par Perplexity AI</span>
+            </motion.div>
 
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-white mb-4">
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-black text-white mb-6">
               Combinées{" "}
-              <span className="bg-gradient-to-r from-yellow-400 via-orange-400 to-yellow-500 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 bg-clip-text text-transparent">
                 VIP
               </span>
             </h1>
 
-            <p className="text-gray-400 text-lg max-w-2xl mx-auto mb-8">
+            <p className="text-gray-300 text-lg md:text-xl max-w-2xl mx-auto mb-10">
               Nos meilleures sélections quotidiennes analysées par intelligence artificielle.
+              <br className="hidden md:block" />
               Tickets <span className="text-green-400 font-semibold">SAFE</span> et{" "}
               <span className="text-orange-400 font-semibold">FUN</span> pour tous les profils.
             </p>
 
-            {/* Stats */}
-            <div className="flex flex-wrap justify-center gap-6 md:gap-10">
-              <div className="text-center">
-                <div className="text-3xl md:text-4xl font-black text-white">87%</div>
-                <div className="text-xs text-gray-500 uppercase tracking-wider">Taux Safe</div>
-              </div>
-              <div className="w-px h-12 bg-white/10 hidden md:block" />
-              <div className="text-center">
-                <div className="text-3xl md:text-4xl font-black text-white">2.5x</div>
-                <div className="text-xs text-gray-500 uppercase tracking-wider">Cote Moyenne</div>
-              </div>
-              <div className="w-px h-12 bg-white/10 hidden md:block" />
-              <div className="text-center">
-                <div className="text-3xl md:text-4xl font-black text-white">+340€</div>
-                <div className="text-xs text-gray-500 uppercase tracking-wider">Ce Mois</div>
-              </div>
+            {/* Stats Cards */}
+            <div className="flex flex-wrap justify-center gap-4 md:gap-6">
+              {[
+                { value: "87%", label: "Taux Safe", color: "from-green-500/20 to-green-600/10", border: "border-green-500/30" },
+                { value: "2.5x", label: "Cote Moyenne", color: "from-amber-500/20 to-yellow-600/10", border: "border-amber-500/30" },
+                { value: "+340€", label: "Ce Mois", color: "from-purple-500/20 to-purple-600/10", border: "border-purple-500/30" },
+              ].map((stat, index) => (
+                <motion.div
+                  key={stat.label}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 + index * 0.1 }}
+                  className={`px-6 py-4 rounded-2xl bg-gradient-to-br ${stat.color} border ${stat.border} backdrop-blur-sm`}
+                >
+                  <div className="text-3xl md:text-4xl font-black text-white">{stat.value}</div>
+                  <div className="text-xs text-gray-400 uppercase tracking-wider">{stat.label}</div>
+                </motion.div>
+              ))}
             </div>
+
+            {/* Scroll indicator */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1 }}
+              className="mt-12"
+            >
+              <motion.div
+                animate={{ y: [0, 8, 0] }}
+                transition={{ duration: 1.5, repeat: Infinity }}
+                className="flex flex-col items-center gap-2 text-gray-500"
+              >
+                <span className="text-sm">Voir les combinés</span>
+                <ChevronRight className="w-5 h-5 rotate-90" />
+              </motion.div>
+            </motion.div>
           </motion.div>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 md:px-6 pb-16">
+      <div className="max-w-7xl mx-auto px-4 md:px-6 pb-16 -mt-8 relative z-10">
         {/* Tabs */}
         <div className="flex items-center justify-center gap-2 mb-8">
           {[
@@ -230,7 +268,7 @@ ${combine.analysis || "Combiné étudié avec soin par notre IA."}
                     ? "bg-green-500 text-black shadow-lg shadow-green-500/30"
                     : tab.id === "fun"
                     ? "bg-orange-500 text-black shadow-lg shadow-orange-500/30"
-                    : "bg-yellow-500 text-black shadow-lg shadow-yellow-500/30"
+                    : "bg-amber-500 text-black shadow-lg shadow-amber-500/30"
                   : "bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white"
                 }
               `}
@@ -252,7 +290,7 @@ ${combine.analysis || "Combiné étudié avec soin par notre IA."}
         {/* Loading State */}
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-20">
-            <Loader2 className="w-10 h-10 text-yellow-500 animate-spin mb-4" />
+            <Loader2 className="w-10 h-10 text-amber-500 animate-spin mb-4" />
             <p className="text-gray-500">Chargement des combinés...</p>
           </div>
         ) : filteredCombines.length === 0 ? (
@@ -262,8 +300,8 @@ ${combine.analysis || "Combiné étudié avec soin par notre IA."}
             animate={{ opacity: 1, scale: 1 }}
             className="text-center py-20"
           >
-            <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-yellow-500/10 flex items-center justify-center">
-              <Trophy className="w-10 h-10 text-yellow-500" />
+            <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-amber-500/10 flex items-center justify-center">
+              <Trophy className="w-10 h-10 text-amber-500" />
             </div>
             <h3 className="text-xl font-bold text-white mb-2">Aucun combiné disponible</h3>
             <p className="text-gray-500 max-w-md mx-auto">
@@ -372,7 +410,7 @@ ${combine.analysis || "Combiné étudié avec soin par notre IA."}
                     {/* Analysis */}
                     {combine.analysis && (
                       <div className="bg-black/20 rounded-xl p-3 mb-4 border border-white/5">
-                        <div className="flex items-center gap-2 text-yellow-400 text-xs font-semibold mb-1">
+                        <div className="flex items-center gap-2 text-amber-400 text-xs font-semibold mb-1">
                           <Sparkles className="w-3 h-3" />
                           Analyse IA
                         </div>
@@ -400,7 +438,7 @@ ${combine.analysis || "Combiné étudié avec soin par notre IA."}
                         </div>
                         <div>
                           <div className="text-xs text-gray-500 uppercase">Gain</div>
-                          <div className="text-xl font-black text-yellow-400">
+                          <div className="text-xl font-black text-amber-400">
                             {(combine.cote * combine.mise).toFixed(0)}€
                           </div>
                         </div>

@@ -1,81 +1,99 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Sparkles, Trophy, Calendar, TrendingUp } from 'lucide-react'
+import { Zap, Calendar } from 'lucide-react'
 import { BankrollWidget } from './bankroll'
+import Link from 'next/link'
 
 export default function Header() {
-  return (
-    <header className="sticky top-0 z-40 bg-dark-900/80 backdrop-blur-xl border-b border-white/5">
-      <div className="max-w-7xl mx-auto px-3 md:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-14 md:h-16">
-          {/* Logo */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="flex items-center gap-2 md:gap-3"
-          >
-            <div className="relative">
-              <motion.div
-                animate={{ rotate: [0, 360] }}
-                transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
-                className="w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-gradient-to-br from-neon-green to-green-600 flex items-center justify-center"
-              >
-                <Trophy className="w-4 h-4 md:w-5 md:h-5 text-dark-900" />
-              </motion.div>
-              <motion.div
-                animate={{ scale: [1, 1.2, 1] }}
-                transition={{ duration: 2, repeat: Infinity }}
-                className="absolute -top-1 -right-1 w-3 h-3 md:w-4 md:h-4 bg-neon-green rounded-full flex items-center justify-center"
-              >
-                <Sparkles className="w-1.5 h-1.5 md:w-2 md:h-2 text-dark-900" />
-              </motion.div>
-            </div>
-            <div className="hidden sm:block">
-              <h1 className="text-base md:text-xl font-bold text-white">
-                La Passion<span className="text-neon-green"> VIP</span>
-              </h1>
-              <p className="text-[9px] md:text-[10px] text-white/50 -mt-0.5">Powered by Perplexity AI</p>
-            </div>
-            {/* Mobile-only short title */}
-            <div className="sm:hidden">
-              <h1 className="text-sm font-bold text-white">
-                LP<span className="text-neon-green">VIP</span>
-              </h1>
-            </div>
-          </motion.div>
+  const [scrolled, setScrolled] = useState(false)
 
-          {/* Right Side */}
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8)
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
+  const today = new Date().toLocaleDateString('fr-FR', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+  })
+
+  return (
+    <header
+      className={`sticky top-0 z-40 apple-header transition-all duration-300 ${
+        scrolled ? 'shadow-[0_1px_0_rgba(255,255,255,0.05)]' : ''
+      }`}
+    >
+      <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-14 md:h-[52px]">
+
+          {/* ── Logo ──────────────────────────────────────── */}
+          <Link href="/" className="flex items-center gap-2.5 group">
+            <motion.div
+              initial={{ opacity: 0, x: -12 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+              className="flex items-center gap-2.5"
+            >
+              {/* Icon */}
+              <div className="relative w-8 h-8 flex-shrink-0">
+                <div className="w-8 h-8 rounded-[10px] bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-[0_2px_8px_rgba(245,158,11,0.35)]">
+                  <Zap className="w-4 h-4 text-black fill-black" />
+                </div>
+                {/* Live dot */}
+                <motion.div
+                  animate={{ scale: [1, 1.3, 1], opacity: [1, 0.7, 1] }}
+                  transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                  className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-apple-green rounded-full border-2 border-black"
+                />
+              </div>
+
+              {/* Wordmark — desktop */}
+              <div className="hidden sm:block">
+                <span className="text-[15px] font-bold tracking-tight text-white">
+                  Prono<span className="text-amber-400">Scope</span>
+                </span>
+              </div>
+
+              {/* Wordmark — mobile */}
+              <div className="sm:hidden">
+                <span className="text-[14px] font-bold text-white">
+                  P<span className="text-amber-400">S</span>
+                </span>
+              </div>
+            </motion.div>
+          </Link>
+
+          {/* ── Right Side ────────────────────────────────── */}
           <motion.div
-            initial={{ opacity: 0, x: 20 }}
+            initial={{ opacity: 0, x: 12 }}
             animate={{ opacity: 1, x: 0 }}
-            className="flex items-center gap-2 md:gap-4"
+            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+            className="flex items-center gap-2"
           >
-            {/* Date - Hidden on mobile */}
-            <div className="hidden lg:flex items-center gap-2 text-white/60">
-              <Calendar className="w-4 h-4" />
-              <span className="text-sm">
-                {new Date().toLocaleDateString('fr-FR', {
-                  weekday: 'long',
-                  day: 'numeric',
-                  month: 'long'
-                })}
-              </span>
+            {/* Date — large screen only */}
+            <div className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-pill bg-white/[0.05] border border-white/[0.07]">
+              <Calendar className="w-3 h-3 text-white/40" />
+              <span className="text-[12px] text-white/50">{today}</span>
             </div>
 
             {/* Bankroll Widget */}
             <BankrollWidget />
 
-            {/* AI Status */}
-            <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-neon-green/10 border border-neon-green/30 rounded-full">
-              <TrendingUp className="w-4 h-4 text-neon-green" />
-              <span className="text-sm text-neon-green font-medium">IA Active</span>
-            </div>
-            {/* Mobile AI indicator */}
-            <div className="md:hidden flex items-center justify-center w-8 h-8 bg-neon-green/10 border border-neon-green/30 rounded-full">
-              <TrendingUp className="w-4 h-4 text-neon-green" />
+            {/* IA Status */}
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-pill bg-white/[0.05] border border-white/[0.07]">
+              <motion.div
+                animate={{ opacity: [1, 0.4, 1] }}
+                transition={{ duration: 2, repeat: Infinity }}
+                className="w-1.5 h-1.5 rounded-full bg-apple-green flex-shrink-0"
+              />
+              <span className="hidden md:inline text-[12px] font-medium text-white/60">IA Active</span>
             </div>
           </motion.div>
+
         </div>
       </div>
     </header>

@@ -19,7 +19,7 @@ export async function POST(req: Request) {
     telegramFormData.append('chat_id', chatId as string);
     telegramFormData.append('photo', imageFile);
     // Tu peux modifier le texte ci-dessous si tu veux !
-    telegramFormData.append('caption', '🚀 *Nouveau Pronostic La Passion VIP !* \n\n⚡ Analyse générée par IA.\n👉 Rejoignez le VIP pour plus de détails.\n\n#ParisSportifs #LaPassionVIP');
+    telegramFormData.append('caption', '🚀 *Nouveau Pronostic PronoScope !* \n\n⚡ Analyse générée par IA.\n👉 Rejoignez PronoScope pour plus de détails.\n\n#ParisSportifs #PronoScope');
     telegramFormData.append('parse_mode', 'Markdown');
 
     // 4. On envoie officiellement à Telegram

@@ -56,7 +56,7 @@ Ticket FUN recommande:
 - EV: ${pronostic.vip_tickets.fun.ev_value}%
 `
 
-    const systemPrompt = `Tu es l'assistant expert de "La Passion VIP", specialise dans les paris sportifs.
+    const systemPrompt = `Tu es l'assistant expert de "PronoScope", specialise dans les paris sportifs.
 Tu as acces au contexte d'un match et de son analyse complete.
 
 CONTEXTE DU MATCH:

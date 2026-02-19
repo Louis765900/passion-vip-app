@@ -17,6 +17,7 @@ export interface PerplexityMatch {
 // Match enrichi pour l'affichage
 export interface Match {
   id: string
+  fixtureId?: number | string // ID du match pour l'API Football
   league: string
   homeTeam: string
   awayTeam: string
@@ -30,6 +31,10 @@ export interface Match {
   timestamp?: number
   status?: string
   isPriority?: boolean
+  // Score (matchs terminés ou en cours)
+  homeScore?: number | null
+  awayScore?: number | null
+  isFinished?: boolean
 }
 
 // Groupe de matchs par ligue
@@ -48,7 +53,7 @@ export interface MatchesAPIResponse {
 }
 
 // ==========================================
-// TYPES PRONOSTIC "LA PASSION VIP"
+// TYPES PRONOSTIC "PRONOSCOPE"
 // ==========================================
 
 export interface KeyStat {
@@ -95,9 +100,14 @@ export interface PronosticAnalysis {
 }
 
 export interface MainMarketPrediction {
+  market?: string
   selection: '1' | 'N' | '2'
-  probability_percent: number
-  fair_odds: number
+  odds_estimated?: number
+  confidence?: number
+  reason?: string
+  // Legacy / computed fields
+  probability_percent?: number
+  fair_odds?: number
 }
 
 export interface PronosticPredictions {

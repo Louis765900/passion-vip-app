@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 export const dynamic = 'force-dynamic';
 import { Match, LeagueGroup, DateFilter } from '@/types'
-import { getTodayMatches, getPriorityMatches } from '@/services/football'
+import { getMatchesByDate, getPriorityMatches } from '@/services/football'
+import { Redis } from '@upstash/redis'
+
+const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL || process.env.UPSTASH_REDIS_REST_KV_REST_API_URL || '',
+  token: process.env.UPSTASH_REDIS_REST_TOKEN || process.env.UPSTASH_REDIS_REST_KV_REST_API_TOKEN || '',
+})
 
 // Ordre de priorité des ligues pour le tri
 const LEAGUE_PRIORITY: string[] = [
@@ -9,11 +15,16 @@ const LEAGUE_PRIORITY: string[] = [
   'UEFA Champions League',
   'Europa League',
   'UEFA Europa League',
+  'Conference League',
   'Ligue 1',
   'Premier League',
   'La Liga',
+  'Primera Division',
   'Serie A',
   'Bundesliga',
+  'Eredivisie',
+  'Championship',
+  'Copa Libertadores',
 ]
 
 /**
@@ -92,29 +103,35 @@ export async function GET(request: NextRequest) {
 
     const shortDate = formatDateShort(dateFilter)
 
+    // ── Cache Redis (5 min today / 30 min future) ──────────────
+    const cacheKey = `matches:${dateFilter}${priorityOnly ? ':priority' : ''}`
+    const cacheTTL = dateFilter === 'today' ? 300 : 1800
+    try {
+      const cached = await redis.get<{ leagues: LeagueGroup[]; total: number }>(cacheKey)
+      if (cached) {
+        console.log(`⚡ [Cache HIT] ${cacheKey}`)
+        return NextResponse.json({ success: true, date: shortDate, total: cached.total, leagues: cached.leagues, cached: true })
+      }
+    } catch { /* ignore cache errors */ }
+
     console.log('='.repeat(60))
     console.log('⚽ MATCHES API - API-Football Request')
     console.log('='.repeat(60))
     console.log(`📅 Filter: ${dateFilter}`)
     console.log(`🎯 Priority only: ${priorityOnly}`)
 
-    // Note: Pour l'instant, API-Football ne supporte que "today"
-    // Pour tomorrow/day-after, on pourrait étendre le service
-    if (dateFilter !== 'today') {
-      console.log('⚠️ API-Football: seul "today" est supporté pour le moment')
-      return NextResponse.json({
-        success: true,
-        date: shortDate,
-        total: 0,
-        leagues: [],
-        message: 'Seuls les matchs du jour sont disponibles avec API-Football',
-      })
+    // Calculer la date cible
+    const targetDate = new Date()
+    if (dateFilter === 'tomorrow') {
+      targetDate.setDate(targetDate.getDate() + 1)
+    } else if (dateFilter === 'day-after') {
+      targetDate.setDate(targetDate.getDate() + 2)
     }
 
-    // Récupérer les matchs depuis API-Football
+    // Recuperer les matchs depuis API-Football
     const matches = priorityOnly
       ? await getPriorityMatches()
-      : await getTodayMatches()
+      : await getMatchesByDate(targetDate)
 
     if (matches.length === 0) {
       console.log('⚠️ Aucun match trouvé')
@@ -123,7 +140,7 @@ export async function GET(request: NextRequest) {
         date: shortDate,
         total: 0,
         leagues: [],
-        message: 'Aucun match trouvé pour aujourd\'hui',
+        message: `Aucun match trouve pour ${shortDate}`,
       })
     }
 
@@ -142,6 +159,11 @@ export async function GET(request: NextRequest) {
       console.log(`   🏆 ${lg.league}: ${lg.matches.length} match(es)`)
     })
     console.log('='.repeat(60))
+
+    // ── Écriture cache Redis ───────────────────────────────────
+    try {
+      await redis.set(cacheKey, { leagues, total: enrichedMatches.length }, { ex: cacheTTL })
+    } catch { /* ignore cache errors */ }
 
     return NextResponse.json({
       success: true,

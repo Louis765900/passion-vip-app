@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
   try {
     // Vérification des variables d'environnement Redis
     if (!redisUrl || !redisToken) {
-      console.error('[REGISTER-INVITE] Variables Redis manquantes');
+      console.error('[REGISTER] Variables Redis manquantes');
       return NextResponse.json(
         { error: 'Configuration serveur incorrecte' },
         { status: 500 }
@@ -28,23 +28,35 @@ export async function POST(request: NextRequest) {
 
     const { email, password, token } = await request.json();
 
-    // 1. Validation des champs
-    if (!email || !password || !token) {
+    // 1. Validation des champs obligatoires
+    if (!email || !password) {
       return NextResponse.json(
-        { error: 'Email, mot de passe et token requis' },
+        { error: 'Email et mot de passe requis' },
         { status: 400 }
       );
     }
 
-    // 2. Vérification du token d'invitation
-    const inviteKey = `invite:${token}`;
-    const inviteData = await redis.get(inviteKey);
-
-    if (!inviteData) {
+    if (password.length < 8) {
       return NextResponse.json(
-        { error: "Lien d'invitation invalide ou expiré" },
+        { error: 'Le mot de passe doit contenir au moins 8 caractères' },
         { status: 400 }
       );
+    }
+
+    // 2. Si token présent, vérifier l'invitation (sinon inscription libre)
+    if (token) {
+      const inviteKey = `invite:${token}`;
+      const inviteData = await redis.get(inviteKey);
+
+      if (!inviteData) {
+        return NextResponse.json(
+          { error: "Lien d'invitation invalide ou expiré" },
+          { status: 400 }
+        );
+      }
+
+      // Supprimer le token d'invitation (usage unique)
+      await redis.del(inviteKey);
     }
 
     // 3. Vérification si l'email existe déjà
@@ -58,10 +70,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 4. Hashage sécurisé du mot de passe (bcryptjs)
+    // 4. Hashage sécurisé du mot de passe
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // 5. Création de l'utilisateur VIP dans Redis
+    // 5. Création de l'utilisateur dans Redis
     const userId = uuidv4();
     const userData = {
       id: userId,
@@ -69,33 +81,24 @@ export async function POST(request: NextRequest) {
       password: hashedPassword,
       role: 'vip',
       createdAt: new Date().toISOString(),
-      invitedBy: 'golden-ticket',
-      inviteToken: token,
+      invitedBy: token ? 'golden-ticket' : 'open-registration',
     };
 
     await redis.set(`user:${normalizedEmail}`, userData);
 
-    // 6. Suppression du token (usage unique = burn)
-    await redis.del(inviteKey);
+    // 6. Initialiser la bankroll à 100
+    await redis.set(`user:${normalizedEmail}:bankroll`, 100);
+    await redis.set(`user:${normalizedEmail}:bankroll:initial`, 100);
 
-    // 7. Création de la session
+    // 7. Création de la session (7 jours)
     const sessionId = uuidv4();
-    const sessionData = {
-      userId: userId,
-      email: normalizedEmail,
-      role: 'vip',
-      createdAt: new Date().toISOString(),
-    };
 
-    // Session valide 30 jours (2592000 secondes)
-    await redis.set(`session:${sessionId}`, sessionData, { ex: 2592000 });
-
-    console.log(`[REGISTER-INVITE] Nouvel utilisateur VIP créé: ${normalizedEmail}`);
+    console.log(`[REGISTER] Nouvel utilisateur créé: ${normalizedEmail} (${token ? 'invitation' : 'inscription libre'})`);
 
     // 8. Préparation de la réponse avec cookies
     const response = NextResponse.json({
       success: true,
-      message: 'Compte VIP créé avec succès',
+      message: 'Compte créé avec succès',
       user: {
         id: userId,
         email: normalizedEmail,
@@ -108,21 +111,19 @@ export async function POST(request: NextRequest) {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax' as const,
-      maxAge: 60 * 60 * 24 * 30, // 30 jours
+      maxAge: 60 * 60 * 24 * 7, // 7 jours
       path: '/',
     };
 
     response.cookies.set('vip_session', sessionId, cookieOptions);
-    response.cookies.set('user_role', 'vip', {
-      ...cookieOptions,
-      httpOnly: false, // Accessible côté client pour le middleware
-    });
+    response.cookies.set('user_role', 'vip', cookieOptions);
+    response.cookies.set('user_email', normalizedEmail, cookieOptions);
 
     return response;
 
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
-    console.error('[REGISTER-INVITE] Erreur:', errorMessage);
+    console.error('[REGISTER] Erreur:', errorMessage);
     return NextResponse.json(
       { error: 'Erreur lors de la création du compte' },
       { status: 500 }

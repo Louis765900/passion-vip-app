@@ -15,9 +15,13 @@ export const maxDuration = 60;
 // CONFIGURATION
 // ═══════════════════════════════════════════════════════════════
 
-// Dates hardcodées pour contourner le bug d'année serveur (2026 au lieu de 2025)
+// Retourne la date du jour au format YYYY-MM-DD
 function getFixedDates(): string[] {
-  return ["2025-01-21", "2025-01-22"];
+  const today = new Date();
+  const yyyy = today.getFullYear();
+  const mm = String(today.getMonth() + 1).padStart(2, '0');
+  const dd = String(today.getDate()).padStart(2, '0');
+  return [`${yyyy}-${mm}-${dd}`];
 }
 
 // IDs des ligues prioritaires
@@ -219,12 +223,14 @@ FORMAT JSON OBLIGATOIRE:
 // ═══════════════════════════════════════════════════════════════
 
 async function saveNoMatchDraft(redis: Redis, dates: string[], reason: string) {
+  const today = dates[0] || new Date().toISOString().split('T')[0];
   const noMatchDraft = {
     intro: "Aucun match des grandes ligues européennes n'est programmé aujourd'hui. Revenez demain pour de nouvelles analyses !",
     vip: null,
     free: [],
     _meta: {
       generated_at: new Date().toISOString(),
+      date: today,
       dates_checked: dates,
       matches_found: 0,
       status: "no_matches",
@@ -232,7 +238,8 @@ async function saveNoMatchDraft(redis: Redis, dates: string[], reason: string) {
     }
   };
 
-  await redis.set("draft:daily:pronostics", JSON.stringify(noMatchDraft));
+  // TTL 36h : le draft expire automatiquement avant le lendemain
+  await redis.set("draft:daily:pronostics", JSON.stringify(noMatchDraft), { ex: 129600 });
   console.log("[REDIS] Draft 'Aucun match' sauvegardé");
 }
 
@@ -241,6 +248,7 @@ async function saveNoMatchDraft(redis: Redis, dates: string[], reason: string) {
 // ═══════════════════════════════════════════════════════════════
 
 async function saveDraftError(redis: Redis, errorMessage: string, dates: string[]) {
+  const today = dates[0] || new Date().toISOString().split('T')[0];
   const errorDraft = {
     intro: "Une erreur technique s'est produite lors de la génération. Veuillez réessayer.",
     vip: null,
@@ -248,12 +256,14 @@ async function saveDraftError(redis: Redis, errorMessage: string, dates: string[
     error: errorMessage,
     _meta: {
       generated_at: new Date().toISOString(),
+      date: today,
       dates_checked: dates,
       status: "error"
     }
   };
 
-  await redis.set("draft:daily:pronostics", JSON.stringify(errorDraft));
+  // TTL 36h : expire automatiquement
+  await redis.set("draft:daily:pronostics", JSON.stringify(errorDraft), { ex: 129600 });
   console.log("[REDIS] Draft d'erreur sauvegardé");
 }
 
@@ -408,8 +418,8 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: "Erreur parsing JSON" }, { status: 500 });
     }
 
-    // 9. SAUVEGARDE DANS REDIS
-    await redis.set("draft:daily:pronostics", JSON.stringify(finalAnalysis));
+    // 9. SAUVEGARDE DANS REDIS (TTL 36h pour éviter les données obsolètes)
+    await redis.set("draft:daily:pronostics", JSON.stringify(finalAnalysis), { ex: 129600 });
     console.log("[CRON] Draft sauvegardé dans Redis");
 
     // 10. RÉPONSE

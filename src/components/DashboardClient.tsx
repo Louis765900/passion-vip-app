@@ -2,7 +2,10 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { AlertCircle, RefreshCw, Calendar, Trophy, Loader2, Crosshair, Flame, Gem } from 'lucide-react'
+import {
+  AlertCircle, RefreshCw, Calendar, Trophy, Loader2, Crosshair,
+  Flame, Gem, Search, Filter, ChevronDown, ChevronUp, Star, X
+} from 'lucide-react'
 import { Toaster } from 'sonner'
 import { Header, LeagueSection, PronosticResult, AnalysisLoader } from '@/components'
 import { usePronostic } from '@/hooks/usePronostic'
@@ -33,6 +36,20 @@ const dateFilters: { id: DateFilter; label: string }[] = [
   { id: 'day-after', label: 'J+2' },
 ]
 
+// Competitions populaires pour les filtres rapides
+const POPULAR_LEAGUES = [
+  { id: 'all', name: 'Toutes', icon: '⚽' },
+  { id: 'champions-league', name: 'Champions League', icon: '🏆' },
+  { id: 'ligue-1', name: 'Ligue 1', icon: '🇫🇷' },
+  { id: 'premier-league', name: 'Premier League', icon: '🏴󠁧󠁢󠁥󠁮󠁧󠁿' },
+  { id: 'la-liga', name: 'La Liga', icon: '🇪🇸' },
+  { id: 'serie-a', name: 'Serie A', icon: '🇮🇹' },
+  { id: 'bundesliga', name: 'Bundesliga', icon: '🇩🇪' },
+  { id: 'europa-league', name: 'Europa League', icon: '🌍' },
+]
+
+const MATCHES_PER_PAGE = 10
+
 export function DashboardClient() {
   const [selectedDate, setSelectedDate] = useState<DateFilter>('today')
   const [leagues, setLeagues] = useState<LeagueGroup[]>([])
@@ -41,6 +58,15 @@ export function DashboardClient() {
   const [matchesError, setMatchesError] = useState<string | null>(null)
   const [sniperMode, setSniperMode] = useState(false)
   const [analyzedMatches, setAnalyzedMatches] = useState<Map<string, AnalyzedMatch>>(new Map())
+
+  // Nouveaux etats pour les filtres et la recherche
+  const [searchQuery, setSearchQuery] = useState('')
+  const [selectedLeagueFilter, setSelectedLeagueFilter] = useState('all')
+  const [showFilters, setShowFilters] = useState(false)
+  const [visibleMatchesCount, setVisibleMatchesCount] = useState(MATCHES_PER_PAGE)
+  const [favorites, setFavorites] = useState<Set<string>>(new Set())
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false)
+  const [collapsedLeagues, setCollapsedLeagues] = useState<Set<string>>(new Set())
 
   const {
     isLoading: isAnalyzing,
@@ -52,11 +78,38 @@ export function DashboardClient() {
     clearPronostic,
   } = usePronostic()
 
+  // Charger les favoris depuis localStorage
+  useEffect(() => {
+    const savedFavorites = localStorage.getItem('favoriteMatches')
+    if (savedFavorites) {
+      try {
+        setFavorites(new Set(JSON.parse(savedFavorites)))
+      } catch (e) {
+        console.error('Error loading favorites:', e)
+      }
+    }
+  }, [])
+
+  // Sauvegarder les favoris
+  const toggleFavorite = useCallback((matchId: string) => {
+    setFavorites(prev => {
+      const newFavorites = new Set(prev)
+      if (newFavorites.has(matchId)) {
+        newFavorites.delete(matchId)
+      } else {
+        newFavorites.add(matchId)
+      }
+      localStorage.setItem('favoriteMatches', JSON.stringify(Array.from(newFavorites)))
+      return newFavorites
+    })
+  }, [])
+
   // Store analyzed match data when pronostic is generated
   useEffect(() => {
     if (currentPronostic && selectedMatch) {
-      const evValue = currentPronostic.vip_tickets.fun.ev_value || 0
-      const confidence = currentPronostic.vip_tickets.safe.confidence || 0
+      // FIX: Safe access with optional chaining
+      const evValue = currentPronostic?.vip_tickets?.fun?.ev_value ?? 0
+      const confidence = currentPronostic?.vip_tickets?.safe?.confidence ?? 0
 
       const badges: MatchBadges = {
         isValue: evValue > 5,
@@ -89,6 +142,7 @@ export function DashboardClient() {
 
       setLeagues(data.leagues || [])
       setTotalMatches(data.total || 0)
+      setVisibleMatchesCount(MATCHES_PER_PAGE) // Reset pagination
     } catch (err) {
       console.error('Error fetching matches:', err)
       setMatchesError(
@@ -105,21 +159,96 @@ export function DashboardClient() {
     fetchMatches(selectedDate)
   }, [selectedDate, fetchMatches])
 
-  // Filter leagues based on sniper mode
+  // Filtrage avance des matchs
   const filteredLeagues = useMemo(() => {
-    if (!sniperMode) return leagues
+    let result = leagues
 
-    return leagues
-      .map(league => ({
-        ...league,
-        matches: league.matches.filter(match => {
-          const analyzed = analyzedMatches.get(match.id)
-          if (!analyzed) return false // Only show analyzed matches in sniper mode
-          return analyzed.badges.isValue || analyzed.badges.isSafe
+    // Filtre par competition
+    if (selectedLeagueFilter !== 'all') {
+      result = result.filter(league => {
+        const leagueName = league.league.toLowerCase()
+        const filter = selectedLeagueFilter.toLowerCase().replace(/-/g, ' ')
+        return leagueName.includes(filter) || filter.includes(leagueName.split(' ')[0])
+      })
+    }
+
+    // Filtre par recherche
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim()
+      result = result
+        .map(league => ({
+          ...league,
+          matches: league.matches.filter(match =>
+            match.homeTeam.toLowerCase().includes(query) ||
+            match.awayTeam.toLowerCase().includes(query) ||
+            league.league.toLowerCase().includes(query)
+          )
+        }))
+        .filter(league => league.matches.length > 0)
+    }
+
+    // Filtre favoris
+    if (showFavoritesOnly) {
+      result = result
+        .map(league => ({
+          ...league,
+          matches: league.matches.filter(match => favorites.has(match.id))
+        }))
+        .filter(league => league.matches.length > 0)
+    }
+
+    // Mode Sniper
+    if (sniperMode) {
+      result = result
+        .map(league => ({
+          ...league,
+          matches: league.matches.filter(match => {
+            const analyzed = analyzedMatches.get(match.id)
+            if (!analyzed) return false
+            return analyzed.badges.isValue || analyzed.badges.isSafe
+          })
+        }))
+        .filter(league => league.matches.length > 0)
+    }
+
+    return result
+  }, [leagues, selectedLeagueFilter, searchQuery, showFavoritesOnly, favorites, sniperMode, analyzedMatches])
+
+  // Pagination - limiter les matchs affiches
+  const paginatedLeagues = useMemo(() => {
+    let matchCount = 0
+    const result: LeagueGroup[] = []
+
+    for (const league of filteredLeagues) {
+      if (matchCount >= visibleMatchesCount) break
+
+      const remainingSlots = visibleMatchesCount - matchCount
+      const matchesToShow = league.matches.slice(0, remainingSlots)
+
+      if (matchesToShow.length > 0) {
+        result.push({
+          ...league,
+          matches: matchesToShow
         })
-      }))
-      .filter(league => league.matches.length > 0)
-  }, [leagues, sniperMode, analyzedMatches])
+        matchCount += matchesToShow.length
+      }
+    }
+
+    return result
+  }, [filteredLeagues, visibleMatchesCount])
+
+  // Total des matchs apres filtrage
+  const totalFilteredMatches = useMemo(() => {
+    return filteredLeagues.reduce((acc, league) => acc + league.matches.length, 0)
+  }, [filteredLeagues])
+
+  // Count live matches (has score + not finished)
+  const liveMatchCount = useMemo(() => {
+    return leagues
+      .flatMap(l => l.matches)
+      .filter(m => m.homeScore !== undefined && m.homeScore !== null && !m.isFinished)
+      .length
+  }, [leagues])
 
   // Count sniper matches
   const sniperMatchCount = useMemo(() => {
@@ -141,11 +270,37 @@ export function DashboardClient() {
 
   const handleDateChange = (date: DateFilter) => {
     setSelectedDate(date)
-    setAnalyzedMatches(new Map()) // Clear analyzed matches when changing date
+    setAnalyzedMatches(new Map())
+    setSearchQuery('')
+    setSelectedLeagueFilter('all')
+    setVisibleMatchesCount(MATCHES_PER_PAGE)
   }
 
   const handleRefresh = () => {
     fetchMatches(selectedDate)
+  }
+
+  const handleLoadMore = () => {
+    setVisibleMatchesCount(prev => prev + MATCHES_PER_PAGE)
+  }
+
+  const toggleLeagueCollapse = (leagueName: string) => {
+    setCollapsedLeagues(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(leagueName)) {
+        newSet.delete(leagueName)
+      } else {
+        newSet.add(leagueName)
+      }
+      return newSet
+    })
+  }
+
+  const clearFilters = () => {
+    setSearchQuery('')
+    setSelectedLeagueFilter('all')
+    setShowFavoritesOnly(false)
+    setSniperMode(false)
   }
 
   const getDateLabel = () => {
@@ -175,240 +330,437 @@ export function DashboardClient() {
     return `${selectedMatch.homeTeam} vs ${selectedMatch.awayTeam}`
   }
 
+  const hasActiveFilters = searchQuery || selectedLeagueFilter !== 'all' || showFavoritesOnly || sniperMode
+
   return (
     <>
-        {/* Controls Row */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col items-center gap-3 md:gap-4 mb-6 md:mb-8"
-        >
-          {/* Date Filter Tabs - Full width on mobile */}
-          <div className="w-full md:w-auto flex items-center justify-center gap-1 md:gap-2 bg-dark-700 rounded-xl p-1">
-            {dateFilters.map((filter) => (
-              <button
-                key={filter.id}
-                onClick={() => handleDateChange(filter.id)}
-                className={`
-                  flex-1 md:flex-none px-3 md:px-4 py-2.5 md:py-2 rounded-lg text-sm font-medium transition-all
-                  ${selectedDate === filter.id
-                    ? 'bg-neon-green text-dark-900'
-                    : 'text-white/70 hover:text-white hover:bg-dark-600'
-                  }
-                `}
-              >
-                {filter.label}
-              </button>
-            ))}
-          </div>
+      {/* ── SPOTLIGHT SEARCH ────────────────────────────────────── */}
+      <motion.div
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+        className="mb-5"
+      >
+        <div className="relative">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 pointer-events-none" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Rechercher une équipe ou compétition…"
+            className="w-full pl-11 pr-10 py-3 rounded-macos text-[14px] text-white placeholder-white/30 outline-none transition-all duration-200"
+            style={{
+              background: 'rgba(255,255,255,0.06)',
+              border: '1px solid rgba(255,255,255,0.09)',
+            }}
+            onFocus={e => {
+              e.currentTarget.style.background = 'rgba(255,255,255,0.08)'
+              e.currentTarget.style.borderColor = 'rgba(245,158,11,0.35)'
+              e.currentTarget.style.boxShadow = '0 0 0 3px rgba(245,158,11,0.07)'
+            }}
+            onBlur={e => {
+              e.currentTarget.style.background = 'rgba(255,255,255,0.06)'
+              e.currentTarget.style.borderColor = 'rgba(255,255,255,0.09)'
+              e.currentTarget.style.boxShadow = 'none'
+            }}
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/16 transition-colors"
+            >
+              <X className="w-3 h-3 text-white/50" />
+            </button>
+          )}
+        </div>
+      </motion.div>
 
-          {/* Second row: Sniper + Date + Refresh */}
-          <div className="w-full md:w-auto flex flex-col sm:flex-row items-center justify-center gap-3">
-            {/* Sniper Mode Toggle */}
-            <motion.button
-              onClick={() => setSniperMode(!sniperMode)}
+      {/* ── DATE TABS — iOS Segmented Control ───────────────────── */}
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35, delay: 0.04, ease: [0.16, 1, 0.3, 1] }}
+        className="mb-5"
+      >
+        <div
+          className="flex items-center p-1 rounded-macos gap-1"
+          style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.07)' }}
+        >
+          {dateFilters.map((filter) => (
+            <button
+              key={filter.id}
+              onClick={() => handleDateChange(filter.id)}
               className={`
-                w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-3 md:py-2 rounded-xl font-medium text-sm transition-all
-                ${sniperMode
-                  ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg shadow-orange-500/25'
-                  : 'bg-dark-700 text-white/70 hover:text-white hover:bg-dark-600'
+                flex-1 py-2 rounded-[10px] text-[13px] font-medium transition-all duration-200
+                ${selectedDate === filter.id
+                  ? 'bg-amber-500 text-black shadow-[0_1px_4px_rgba(0,0,0,0.4)]'
+                  : 'text-white/55 hover:text-white/80'
                 }
               `}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
             >
-              <Crosshair className={`w-5 h-5 md:w-4 md:h-4 ${sniperMode ? 'animate-pulse' : ''}`} />
-              Mode Sniper
-              {sniperMatchCount > 0 && (
-                <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${ 
-                  sniperMode ? 'bg-white/20' : 'bg-neon-green/20 text-neon-green'
-                }`}>
-                  {sniperMatchCount}
-                </span>
-              )}
-            </motion.button>
+              {filter.label}
+            </button>
+          ))}
+        </div>
 
-            {/* Date display + Refresh */}
-            <div className="flex items-center gap-2 w-full sm:w-auto">
-              <div className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-3 md:py-2 bg-dark-700/50 rounded-lg">
-                <Calendar className="w-4 h-4 text-neon-green" />
-                <span className="text-sm text-white/70 capitalize">{getDateLabel()}</span>
-              </div>
+        {/* Date label */}
+        <div className="flex items-center justify-center gap-1.5 mt-2.5">
+          <Calendar className="w-3 h-3 text-white/30" />
+          <span className="text-[12px] text-white/35 capitalize">{getDateLabel()}</span>
+        </div>
+      </motion.div>
 
+      {/* ── COMPETITION CHIPS — horizontal scroll ───────────────── */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.08 }}
+        className="mb-4"
+      >
+        <div className="overflow-x-auto -mx-4 px-4 pb-1" style={{ scrollbarWidth: 'none' }}>
+          <div className="flex gap-1.5 min-w-max">
+            {POPULAR_LEAGUES.map((league) => (
               <button
-                onClick={handleRefresh}
-                disabled={isLoadingMatches}
-                className="flex items-center justify-center p-3 md:p-2 bg-dark-700 hover:bg-dark-600 rounded-lg transition-colors disabled:opacity-50 min-w-[44px] min-h-[44px] md:min-w-0 md:min-h-0"
+                key={league.id}
+                onClick={() => setSelectedLeagueFilter(league.id)}
+                className={`
+                  flex items-center gap-1.5 px-3 py-1.5 rounded-pill text-[12px] font-medium
+                  transition-all duration-150 whitespace-nowrap
+                  ${selectedLeagueFilter === league.id
+                    ? 'bg-amber-500 text-black shadow-[0_2px_8px_rgba(245,158,11,0.3)]'
+                    : 'text-white/55 hover:text-white/80'
+                  }
+                `}
+                style={selectedLeagueFilter !== league.id ? {
+                  background: 'rgba(255,255,255,0.06)',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                } : {}}
               >
-                <RefreshCw
-                  className={`w-5 h-5 md:w-4 md:h-4 text-white/70 ${isLoadingMatches ? 'animate-spin' : ''}`}
-                />
+                <span className="text-[13px]">{league.icon}</span>
+                <span>{league.name}</span>
               </button>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Sniper Mode Info */}
-        <AnimatePresence>
-          {sniperMode && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="mb-4 md:mb-6"
-            >
-              <div className="p-3 md:p-4 bg-gradient-to-r from-orange-500/10 to-red-500/10 border border-orange-500/30 rounded-xl">
-                <div className="flex items-center gap-2 md:gap-3 mb-2">
-                  <Crosshair className="w-4 h-4 md:w-5 md:h-5 text-orange-400" />
-                  <h3 className="text-sm md:text-base font-semibold text-white">Mode Sniper Active</h3>
-                </div>
-                <p className="text-xs md:text-sm text-white/70 mb-3">
-                  Seuls les matchs analyses avec une Value (EV) &gt; 5% ou une Confiance &gt; 80% sont affiches.
-                  Analysez des matchs pour decouvrir les pepites !
-                </p>
-                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 text-xs">
-                  <div className="flex items-center gap-2">
-                    <div className="flex items-center gap-1 px-2 py-1.5 md:py-1 bg-orange-500/90 rounded-full">
-                      <Flame className="w-3 h-3 text-white" />
-                      <span className="font-bold text-white">VALUE</span>
-                    </div>
-                    <span className="text-white/50">= EV &gt; 5%</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="flex items-center gap-1 px-2 py-1.5 md:py-1 bg-blue-500/90 rounded-full">
-                      <Gem className="w-3 h-3 text-white" />
-                      <span className="font-bold text-white">SAFE</span>
-                    </div>
-                    <span className="text-white/50">= Confiance &gt;= 80%</span>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Stats Bar */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="flex flex-wrap items-center justify-center gap-3 md:gap-6 mb-6 md:mb-8 px-2"
-        >
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 bg-neon-green rounded-full animate-pulse flex-shrink-0" />
-            <span className="text-xs md:text-sm text-white/60">
-              {sniperMode ? filteredLeagues.reduce((acc, l) => acc + l.matches.length, 0) : totalMatches} match{totalMatches !== 1 ? 's' : ''} {sniperMode ? 'detecte(s)' : 'disponible(s)'}
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 bg-blue-400 rounded-full flex-shrink-0" />
-            <span className="text-xs md:text-sm text-white/60">
-              {sniperMode ? filteredLeagues.length : leagues.length} competition{leagues.length !== 1 ? 's' : ''}
-            </span>
-          </div>
-          {analyzedMatches.size > 0 && (
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-purple-400 rounded-full flex-shrink-0" />
-              <span className="text-xs md:text-sm text-white/60">
-                {analyzedMatches.size} analyse(s)
-              </span>
-            </div>
-          )}
-        </motion.div>
-
-        {/* Error Alerts */}
-        <AnimatePresence>
-          {(matchesError || pronosticError) && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="mb-4 md:mb-6 p-3 md:p-4 bg-red-500/10 border border-red-500/30 rounded-xl flex items-start md:items-center gap-3"
-            >
-              <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5 md:mt-0" />
-              <p className="text-red-300 text-xs md:text-sm">{matchesError || pronosticError}</p>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Loading State */}
-        {isLoadingMatches ? (
-          <div className="flex flex-col items-center justify-center py-12 md:py-20 px-4">
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
-              className="mb-4"
-            >
-              <Loader2 className="w-10 h-10 md:w-12 md:h-12 text-neon-green" />
-            </motion.div>
-            <p className="text-white/60 text-xs md:text-sm text-center">Recherche des matchs via Perplexity AI...</p>
-            <p className="text-white/40 text-xs mt-2 text-center">Cela peut prendre quelques secondes</p>
-          </div>
-        ) : filteredLeagues.length === 0 ? (
-          /* Empty State */
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center py-12 md:py-20 px-4"
-          >
-            <div className="w-16 h-16 md:w-20 md:h-20 mx-auto mb-4 md:mb-6 bg-dark-700 rounded-full flex items-center justify-center">
-              {sniperMode ? (
-                <Crosshair className="w-8 h-8 md:w-10 md:h-10 text-orange-400/50" />
-              ) : (
-                <Calendar className="w-8 h-8 md:w-10 md:h-10 text-white/30" />
-              )}
-            </div>
-            <h3 className="text-lg md:text-xl font-semibold text-white mb-2">
-              {sniperMode ? 'Aucune pepite detectee' : 'Aucun match disponible'}
-            </h3>
-            <p className="text-sm md:text-base text-white/50 max-w-md mx-auto">
-              {sniperMode
-                ? 'Analysez des matchs pour decouvrir les meilleures opportunites. Les matchs avec EV > 5% ou Confiance >= 80% apparaitront ici.'
-                : 'Il n\'y a pas de match programme pour cette date dans les ligues majeures. Essayez une autre date ou revenez plus tard.'
-              }
-            </p>
-            {sniperMode && (
-              <button
-                onClick={() => setSniperMode(false)}
-                className="mt-4 px-4 py-3 md:py-2 bg-dark-700 hover:bg-dark-600 text-white/70 hover:text-white rounded-lg transition-colors text-sm min-h-[44px]"
-              >
-                Desactiver le Mode Sniper
-              </button>
-            )}
-          </motion.div>
-        ) : (
-          /* Leagues */
-          <div className="space-y-6 md:space-y-10">
-            {filteredLeagues.map((leagueData) => (
-              <LeagueSection
-                key={leagueData.league}
-                league={leagueData.league}
-                matches={leagueData.matches}
-                onGeneratePronostic={generatePronostic}
-                loadingMatchId={loadingMatchId}
-                analyzedMatches={badgesMap}
-              />
             ))}
           </div>
-        )}
+        </div>
+      </motion.div>
 
-      {/* Analysis Loader Modal */}
+      {/* ── ACTION PILLS ────────────────────────────────────────── */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.1 }}
+        className="flex flex-wrap items-center gap-2 mb-5"
+      >
+        {/* Favoris */}
+        <button
+          onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-pill text-[12px] font-medium transition-all duration-150 ${
+            showFavoritesOnly
+              ? 'bg-amber-400/15 text-amber-400 border border-amber-400/25'
+              : 'text-white/55 hover:text-white/80'
+          }`}
+          style={!showFavoritesOnly ? { background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)' } : {}}
+        >
+          <Star className={`w-3.5 h-3.5 ${showFavoritesOnly ? 'fill-amber-400' : ''}`} />
+          Favoris
+          {favorites.size > 0 && (
+            <span className="px-1.5 py-0 bg-amber-400/20 rounded-full text-[10px] font-bold tabular-nums">
+              {favorites.size}
+            </span>
+          )}
+        </button>
+
+        {/* Sniper */}
+        <button
+          onClick={() => setSniperMode(!sniperMode)}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-pill text-[12px] font-medium transition-all duration-150 ${
+            sniperMode
+              ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30'
+              : 'text-white/55 hover:text-white/80'
+          }`}
+          style={!sniperMode ? { background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)' } : {}}
+        >
+          <Crosshair className={`w-3.5 h-3.5 ${sniperMode ? 'animate-pulse' : ''}`} />
+          Sniper
+          {sniperMatchCount > 0 && (
+            <span className="px-1.5 py-0 bg-orange-500/20 rounded-full text-[10px] font-bold tabular-nums">
+              {sniperMatchCount}
+            </span>
+          )}
+        </button>
+
+        {/* Clear */}
+        <AnimatePresence>
+          {hasActiveFilters && (
+            <motion.button
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              onClick={clearFilters}
+              className="flex items-center gap-1 px-3 py-1.5 rounded-pill text-[12px] text-white/35 hover:text-white/60 transition-colors"
+            >
+              <X className="w-3 h-3" />
+              Effacer
+            </motion.button>
+          )}
+        </AnimatePresence>
+
+        {/* Refresh */}
+        <button
+          onClick={handleRefresh}
+          disabled={isLoadingMatches}
+          className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-pill text-[12px] text-white/55 hover:text-white/80 transition-all disabled:opacity-40"
+          style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)' }}
+        >
+          <RefreshCw className={`w-3.5 h-3.5 ${isLoadingMatches ? 'animate-spin' : ''}`} />
+          <span className="hidden sm:inline">Actualiser</span>
+        </button>
+      </motion.div>
+
+      {/* ── SNIPER INFO BANNER ──────────────────────────────────── */}
       <AnimatePresence>
-        {isAnalyzing && !currentPronostic && (
-          <AnalysisLoader
-            isVisible={isAnalyzing}
-            matchName={getAnalyzingMatchName()}
-          />
+        {sniperMode && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.2 }}
+            className="mb-4 overflow-hidden"
+          >
+            <div
+              className="p-3.5 rounded-macos"
+              style={{
+                background: 'rgba(255,159,10,0.08)',
+                border: '1px solid rgba(255,159,10,0.20)',
+              }}
+            >
+              <div className="flex items-center gap-2 mb-1.5">
+                <Crosshair className="w-3.5 h-3.5 text-orange-400" />
+                <span className="text-[13px] font-semibold text-white/90">Mode Sniper actif</span>
+              </div>
+              <p className="text-[12px] text-white/50 mb-2.5">
+                Seuls les matchs avec VALUE (EV &gt; 5%) ou SAFE (Confiance ≥ 80%) sont affichés.
+              </p>
+              <div className="flex flex-wrap gap-2 text-[11px]">
+                <div className="flex items-center gap-1.5">
+                  <span className="flex items-center gap-1 px-2 py-0.5 rounded-pill font-bold" style={{ background: 'rgba(255,159,10,0.15)', color: '#FF9F0A', border: '1px solid rgba(255,159,10,0.25)' }}>
+                    <Flame className="w-2.5 h-2.5" /> VALUE
+                  </span>
+                  <span className="text-white/35">= EV &gt; 5%</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="flex items-center gap-1 px-2 py-0.5 rounded-pill font-bold" style={{ background: 'rgba(10,132,255,0.14)', color: '#0A84FF', border: '1px solid rgba(10,132,255,0.25)' }}>
+                    <Gem className="w-2.5 h-2.5" /> SAFE
+                  </span>
+                  <span className="text-white/35">= Confiance ≥ 80%</span>
+                </div>
+              </div>
+            </div>
+          </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Pronostic Result Modal */}
+      {/* ── STATS BAR ───────────────────────────────────────────── */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.12 }}
+        className="flex items-center gap-4 mb-5 px-0.5"
+      >
+        <div className="flex items-center gap-1.5">
+          <motion.div
+            animate={liveMatchCount > 0
+              ? { opacity: [1, 0.25, 1], scale: [1, 1.35, 1] }
+              : { opacity: [1, 0.45, 1] }
+            }
+            transition={{ duration: liveMatchCount > 0 ? 1 : 2.5, repeat: Infinity, ease: 'easeInOut' }}
+            className={`w-1.5 h-1.5 rounded-full transition-colors duration-500 ${liveMatchCount > 0 ? 'bg-apple-green' : 'bg-white/20'}`}
+          />
+          {liveMatchCount > 0 && (
+            <span className="text-[11px] font-semibold text-apple-green">{liveMatchCount} LIVE ·</span>
+          )}
+          <span className="text-[12px] text-white/40">
+            {totalFilteredMatches} match{totalFilteredMatches !== 1 ? 's' : ''}
+          </span>
+        </div>
+        <div className="w-px h-3 bg-white/10" />
+        <span className="text-[12px] text-white/40">
+          {paginatedLeagues.length} compétition{paginatedLeagues.length !== 1 ? 's' : ''}
+        </span>
+        {analyzedMatches.size > 0 && (
+          <>
+            <div className="w-px h-3 bg-white/10" />
+            <span className="text-[12px] text-amber-500/70">
+              {analyzedMatches.size} analysé{analyzedMatches.size !== 1 ? 's' : ''}
+            </span>
+          </>
+        )}
+      </motion.div>
+
+      {/* ── ERROR ───────────────────────────────────────────────── */}
+      <AnimatePresence>
+        {(matchesError || pronosticError) && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            className="mb-4 p-3.5 rounded-macos flex items-start gap-3"
+            style={{ background: 'rgba(255,69,58,0.08)', border: '1px solid rgba(255,69,58,0.20)' }}
+          >
+            <AlertCircle className="w-4 h-4 text-apple-red flex-shrink-0 mt-0.5" />
+            <p className="text-[13px] text-red-300/90">{matchesError || pronosticError}</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── CONTENT ─────────────────────────────────────────────── */}
+      {isLoadingMatches ? (
+        /* Loading */
+        <div className="flex flex-col items-center justify-center py-16 gap-4">
+          <motion.div animate={{ rotate: 360 }} transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}>
+            <Loader2 className="w-8 h-8 text-amber-500/70" />
+          </motion.div>
+          <p className="text-[13px] text-white/35">Chargement des matchs…</p>
+        </div>
+
+      ) : paginatedLeagues.length === 0 ? (
+        /* Empty State */
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center py-16 px-4"
+        >
+          <div
+            className="w-14 h-14 mx-auto mb-4 rounded-[18px] flex items-center justify-center"
+            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.07)' }}
+          >
+            {hasActiveFilters
+              ? <Search className="w-6 h-6 text-white/25" />
+              : <Calendar className="w-6 h-6 text-white/25" />
+            }
+          </div>
+          <h3 className="text-[15px] font-semibold text-white/80 mb-1.5">
+            {hasActiveFilters ? 'Aucun résultat' : 'Aucun match disponible'}
+          </h3>
+          <p className="text-[13px] text-white/35 max-w-sm mx-auto mb-4">
+            {hasActiveFilters
+              ? 'Essayez de modifier vos filtres ou votre recherche.'
+              : "Pas de match programmé pour cette date. Essayez une autre."
+            }
+          </p>
+          {hasActiveFilters && (
+            <button
+              onClick={clearFilters}
+              className="px-5 py-2 rounded-pill text-[13px] font-medium text-amber-400 transition-colors"
+              style={{ background: 'rgba(245,158,11,0.10)', border: '1px solid rgba(245,158,11,0.20)' }}
+            >
+              Effacer les filtres
+            </button>
+          )}
+        </motion.div>
+
+      ) : (
+        /* Leagues */
+        <div className="space-y-3">
+          {paginatedLeagues.map((leagueData, i) => (
+            <motion.div
+              key={leagueData.league}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.03, duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+              className="overflow-hidden rounded-ios"
+              style={{
+                background: 'rgba(255,255,255,0.025)',
+                border: '1px solid rgba(255,255,255,0.06)',
+              }}
+            >
+              {/* League Accordion Header */}
+              <button
+                onClick={() => toggleLeagueCollapse(leagueData.league)}
+                className="w-full flex items-center justify-between px-4 py-3.5 hover:bg-white/[0.03] transition-colors"
+              >
+                <div className="flex items-center gap-2.5">
+                  <Trophy className="w-3.5 h-3.5 text-amber-500/70" />
+                  <span className="text-[13px] font-semibold text-white/85">{leagueData.league}</span>
+                  <span
+                    className="px-2 py-0.5 rounded-pill text-[10px] font-medium text-white/40"
+                    style={{ background: 'rgba(255,255,255,0.06)' }}
+                  >
+                    {leagueData.matches.length}
+                  </span>
+                </div>
+                <motion.div
+                  animate={{ rotate: collapsedLeagues.has(leagueData.league) ? -90 : 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <ChevronDown className="w-4 h-4 text-white/25" />
+                </motion.div>
+              </button>
+
+              {/* Separator */}
+              {!collapsedLeagues.has(leagueData.league) && (
+                <div className="mx-4 h-px bg-white/[0.04]" />
+              )}
+
+              {/* League Content */}
+              <AnimatePresence>
+                {!collapsedLeagues.has(leagueData.league) && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+                    className="overflow-hidden"
+                  >
+                    <div className="p-3">
+                      <LeagueSection
+                        league={leagueData.league}
+                        matches={leagueData.matches}
+                        onGeneratePronostic={generatePronostic}
+                        loadingMatchId={loadingMatchId}
+                        analyzedMatches={badgesMap}
+                        favorites={favorites}
+                        onToggleFavorite={toggleFavorite}
+                        hideHeader={true}
+                      />
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
+          ))}
+
+          {/* Load more */}
+          {visibleMatchesCount < totalFilteredMatches && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="flex justify-center pt-2"
+            >
+              <button
+                onClick={handleLoadMore}
+                className="flex items-center gap-2 px-6 py-2.5 rounded-pill text-[13px] font-medium text-white/50 hover:text-white/75 transition-all"
+                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}
+              >
+                <ChevronDown className="w-4 h-4" />
+                {totalFilteredMatches - visibleMatchesCount} matchs supplémentaires
+              </button>
+            </motion.div>
+          )}
+        </div>
+      )}
+
+      {/* ── ANALYSIS LOADER ─────────────────────────────────────── */}
+      <AnimatePresence>
+        {isAnalyzing && !currentPronostic && (
+          <AnalysisLoader isVisible={isAnalyzing} matchName={getAnalyzingMatchName()} />
+        )}
+      </AnimatePresence>
+
+      {/* ── PRONOSTIC MODAL ─────────────────────────────────────── */}
       <AnimatePresence>
         {currentPronostic && selectedMatch && (
-          <PronosticResult
-            match={selectedMatch}
-            pronostic={currentPronostic}
-            onClose={clearPronostic}
-          />
+          <PronosticResult match={selectedMatch} pronostic={currentPronostic} onClose={clearPronostic} />
         )}
       </AnimatePresence>
     </>

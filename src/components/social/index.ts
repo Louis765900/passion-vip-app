@@ -1,2 +1,2 @@
-export { ShareButton } from './ShareButton'
-export { TicketTemplate } from './TicketTemplate'
+export * from './ShareButtons';
+export * from './ShareButton';

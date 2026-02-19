@@ -11,7 +11,8 @@ import {
   BellOff,
   RefreshCw,
   PieChart,
-  BarChart3
+  BarChart3,
+  CheckCircle
 } from 'lucide-react'
 import { useSyncedBankroll } from '@/hooks/useSyncedBankroll'
 import { usePushNotifications } from '@/hooks/usePushNotifications'
@@ -32,6 +33,7 @@ export default function MesParisClient({ userEmail }: MesParisClientProps) {
     isLoading,
     error,
     fetchBets,
+    checkPendingBets,
     roi
   } = useSyncedBankroll()
 
@@ -43,11 +45,24 @@ export default function MesParisClient({ userEmail }: MesParisClientProps) {
   } = usePushNotifications()
 
   const [isRefreshing, setIsRefreshing] = useState(false)
+  const [isChecking, setIsChecking] = useState(false)
+  const [checkResult, setCheckResult] = useState<string | null>(null)
 
   const handleRefresh = async () => {
     setIsRefreshing(true)
     await fetchBets()
     setTimeout(() => setIsRefreshing(false), 500)
+  }
+
+  const handleCheckBets = async () => {
+    setIsChecking(true)
+    setCheckResult(null)
+    const updated = await checkPendingBets()
+    setCheckResult(updated ? 'Paris mis a jour !' : 'Aucune mise a jour disponible')
+    setTimeout(() => {
+      setIsChecking(false)
+      setCheckResult(null)
+    }, 3000)
   }
 
   // Animations
@@ -102,6 +117,24 @@ export default function MesParisClient({ userEmail }: MesParisClientProps) {
               </button>
             )}
 
+            {/* Bouton Verifier les paris */}
+            {stats.pending > 0 && (
+              <button
+                onClick={handleCheckBets}
+                disabled={isChecking}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg bg-neon-green/20 text-neon-green border border-neon-green/30 hover:bg-neon-green/30 transition-all text-sm font-medium"
+              >
+                {isChecking ? (
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                ) : (
+                  <CheckCircle className="w-4 h-4" />
+                )}
+                <span className="hidden sm:inline">
+                  {isChecking ? 'Verification...' : 'Verifier mes paris'}
+                </span>
+              </button>
+            )}
+
             {/* Bouton Refresh */}
             <button
               onClick={handleRefresh}
@@ -121,6 +154,21 @@ export default function MesParisClient({ userEmail }: MesParisClientProps) {
         initial="hidden"
         animate="visible"
       >
+        {/* Resultat de la verification */}
+        {checkResult && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            className="mb-4 p-3 rounded-lg bg-neon-green/10 border border-neon-green/30"
+          >
+            <p className="text-neon-green text-sm font-medium flex items-center gap-2">
+              <CheckCircle className="w-4 h-4" />
+              {checkResult}
+            </p>
+          </motion.div>
+        )}
+
         {/* Erreur - demande de reconnexion si non connecte */}
         {error && (
           <motion.div
@@ -162,10 +210,10 @@ export default function MesParisClient({ userEmail }: MesParisClientProps) {
               <TrendingUp className="w-4 h-4" />
               Profit
             </div>
-            <div className={`text-2xl font-bold ${stats.profit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+            <div className={`text-2xl font-bold ${stats.profit >= 0 ? 'text-amber-400' : 'text-red-400'}`}>
               {stats.profit >= 0 ? '+' : ''}{stats.profit.toFixed(2)}
             </div>
-            <div className={`text-xs ${roi >= 0 ? 'text-green-400/70' : 'text-red-400/70'}`}>
+            <div className={`text-xs ${roi >= 0 ? 'text-amber-400/70' : 'text-red-400/70'}`}>
               ROI: {roi.toFixed(1)}%
             </div>
           </div>

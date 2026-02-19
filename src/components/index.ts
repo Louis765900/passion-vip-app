@@ -9,6 +9,16 @@ export { default as VipConfidenceCard } from './VipConfidenceCard'
 export { DashboardClient } from './DashboardClient'
 export { MatchCardSkeleton, PronosticSkeleton, DashboardSkeleton } from './LoadingSkeleton'
 
+// Legal & Compliance
+export { LegalFooter } from './LegalFooter'
+export { DisclaimerBanner } from './DisclaimerBanner'
+
+// Streaming Analysis (V3)
+export { StreamingAnalysis } from './StreamingAnalysis'
+
+// Performance Tracking
+export { PredictionTracker } from './PredictionTracker'
+
 // Charts (V2)
 export * from './charts'
 

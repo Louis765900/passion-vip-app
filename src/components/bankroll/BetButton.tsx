@@ -1,11 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { CircleDollarSign, Calculator, Check, AlertTriangle, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
-import { useBankroll } from '@/hooks/useBankroll'
-import { Match, SafeTicket, FunTicket } from '@/types'
+import { Match, SafeTicket, FunTicket, calculateKellyStake } from '@/types'
 
 interface BetButtonProps {
   match: Match
@@ -15,21 +14,38 @@ interface BetButtonProps {
 }
 
 export function BetButton({ match, ticket, ticketType, confidence }: BetButtonProps) {
-  const { bankroll, placeBet, getKellySuggestion } = useBankroll()
   const [showConfirm, setShowConfirm] = useState(false)
   const [customStake, setCustomStake] = useState<string>('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [bankrollBalance, setBankrollBalance] = useState(100)
 
-  const kellySuggestion = getKellySuggestion(confidence, ticket.odds_estimated)
+  // Charger la bankroll depuis le serveur au montage
+  useEffect(() => {
+    async function fetchBankroll() {
+      try {
+        const response = await fetch('/api/user/bets')
+        if (response.ok) {
+          const data = await response.json()
+          setBankrollBalance(data.bankroll || 100)
+        }
+      } catch (error) {
+        console.log('[BetButton] Using default bankroll')
+      }
+    }
+    fetchBankroll()
+  }, [])
+
+  const safeOdds = ticket.odds_estimated ?? 1.5
+  const kellySuggestion = calculateKellyStake(bankrollBalance, confidence, safeOdds)
   const suggestedStake = Math.max(1, Math.round(kellySuggestion))
 
-  const stake = customStake ? parseFloat(customStake) : suggestedStake
-  const canAfford = stake <= bankroll.balance
+  const stake = parseFloat(customStake) || suggestedStake
+  const canAfford = stake <= bankrollBalance
 
   const handlePlaceBet = async () => {
     if (!canAfford) {
       toast.error('Bankroll insuffisante', {
-        description: `Il vous faut ${stake}EUR mais vous avez ${bankroll.balance.toFixed(0)}EUR`
+        description: `Il vous faut ${stake}EUR mais vous avez ${Math.round(bankrollBalance)}EUR`
       })
       return
     }
@@ -37,15 +53,13 @@ export function BetButton({ match, ticket, ticketType, confidence }: BetButtonPr
     setIsSubmitting(true)
 
     try {
-      // 1. Sauvegarder en local
-      placeBet(match, ticket, ticketType, stake)
-
-      // 2. Synchroniser avec le serveur
+      // Enregistrer le pari sur le serveur uniquement
       const response = await fetch('/api/user/bets', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           matchId: match.id,
+          fixtureId: match.fixtureId,
           homeTeam: match.homeTeam,
           awayTeam: match.awayTeam,
           league: match.league,
@@ -53,24 +67,28 @@ export function BetButton({ match, ticket, ticketType, confidence }: BetButtonPr
           ticketType,
           market: ticket.market,
           selection: ticket.selection,
-          odds: ticket.odds_estimated,
+          odds: safeOdds,
           stake,
-          potentialWin: stake * ticket.odds_estimated
+          potentialWin: stake * safeOdds
         })
       })
 
       if (!response.ok) {
-        console.warn('[BetButton] Erreur sync serveur, pari sauvegarde localement')
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Erreur lors de l\'enregistrement')
       }
 
+      // Mettre a jour la bankroll locale
+      setBankrollBalance(prev => prev - stake)
+
       toast.success('Pari enregistre !', {
-        description: `${stake}EUR sur ${ticket.selection} @ ${ticket.odds_estimated}`,
+        description: `${stake}EUR sur ${ticket.selection} @ ${safeOdds}`,
         icon: <Check className="w-4 h-4" />
       })
     } catch (error) {
       console.error('[BetButton] Erreur:', error)
-      toast.success('Pari enregistre localement', {
-        description: `${stake}EUR sur ${ticket.selection}`
+      toast.error('Erreur', {
+        description: error instanceof Error ? error.message : 'Impossible d\'enregistrer le pari'
       })
     } finally {
       setIsSubmitting(false)
@@ -82,12 +100,12 @@ export function BetButton({ match, ticket, ticketType, confidence }: BetButtonPr
   return (
     <>
       <motion.button
-        onClick={() => setShowConfirm(true)}
+        onClick={() => { setCustomStake(suggestedStake.toString()); setShowConfirm(true) }}
         className={`
           flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm
           transition-all duration-200
           ${ticketType === 'safe'
-            ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30 border border-green-500/30'
+            ? 'bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 border border-amber-500/30'
             : 'bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 border border-purple-500/30'
           }
         `}
@@ -124,7 +142,7 @@ export function BetButton({ match, ticket, ticketType, confidence }: BetButtonPr
                 </p>
                 <p className="text-xs text-white/50 mt-1">{ticket.market}</p>
                 <p className="text-sm text-neon-green font-semibold mt-1">
-                  {ticket.selection} @ {ticket.odds_estimated}
+                  {ticket.selection} @ {safeOdds}
                 </p>
               </div>
 
@@ -143,16 +161,16 @@ export function BetButton({ match, ticket, ticketType, confidence }: BetButtonPr
                 <div className="flex items-center gap-2">
                   <input
                     type="number"
-                    value={customStake || suggestedStake}
+                    value={customStake}
                     onChange={(e) => setCustomStake(e.target.value)}
                     className="flex-1 px-3 py-2 bg-dark-700 border border-white/10 rounded-lg text-white focus:outline-none focus:border-neon-green/50"
                     min="1"
-                    max={bankroll.balance}
+                    max={bankrollBalance}
                   />
                   <span className="text-white/50">EUR</span>
                 </div>
                 <p className="text-xs text-white/40 mt-1">
-                  Bankroll disponible: {bankroll.balance.toFixed(0)}EUR
+                  Bankroll disponible: {Math.round(bankrollBalance)}EUR
                 </p>
               </div>
 
@@ -168,7 +186,7 @@ export function BetButton({ match, ticket, ticketType, confidence }: BetButtonPr
               <div className="p-3 bg-neon-green/10 border border-neon-green/30 rounded-xl mb-6">
                 <p className="text-xs text-neon-green/70">Gain potentiel</p>
                 <p className="text-xl font-bold text-neon-green">
-                  {(stake * ticket.odds_estimated).toFixed(2)}EUR
+                  {(stake * safeOdds).toFixed(2)}EUR
                 </p>
               </div>
 

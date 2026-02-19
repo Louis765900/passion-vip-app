@@ -59,8 +59,8 @@ export async function POST(req: NextRequest) {
       });
 
       response.cookies.set('vip_session', sessionToken, getCookieOptions(true));
-      response.cookies.set('user_role', 'admin', getCookieOptions(false));
-      response.cookies.set('user_email', normalizedEmail, getCookieOptions(false));
+      response.cookies.set('user_role', 'admin', getCookieOptions(true));
+      response.cookies.set('user_email', normalizedEmail, getCookieOptions(true));
 
       console.log(`[AUTH] Admin login: ${normalizedEmail}`);
       return response;
@@ -96,8 +96,8 @@ export async function POST(req: NextRequest) {
             });
 
             response.cookies.set('vip_session', sessionToken, getCookieOptions(true));
-            response.cookies.set('user_role', user.role || 'vip', getCookieOptions(false));
-            response.cookies.set('user_email', normalizedEmail, getCookieOptions(false));
+            response.cookies.set('user_role', user.role || 'vip', getCookieOptions(true));
+            response.cookies.set('user_email', normalizedEmail, getCookieOptions(true));
 
             console.log(`[AUTH] Redis VIP login: ${normalizedEmail}`);
             return response;
@@ -123,8 +123,8 @@ export async function POST(req: NextRequest) {
       });
 
       response.cookies.set('vip_session', sessionToken, getCookieOptions(true));
-      response.cookies.set('user_role', 'vip', getCookieOptions(false));
-      response.cookies.set('user_email', normalizedEmail, getCookieOptions(false));
+      response.cookies.set('user_role', 'vip', getCookieOptions(true));
+      response.cookies.set('user_email', normalizedEmail, getCookieOptions(true));
 
       console.log(`[AUTH] VIP login (hardcoded): ${normalizedEmail}`);
       return response;
@@ -144,8 +144,8 @@ export async function POST(req: NextRequest) {
       });
 
       response.cookies.set('vip_session', sessionToken, getCookieOptions(true));
-      response.cookies.set('user_role', 'free', getCookieOptions(false));
-      response.cookies.set('user_email', normalizedEmail, getCookieOptions(false));
+      response.cookies.set('user_role', 'free', getCookieOptions(true));
+      response.cookies.set('user_email', normalizedEmail, getCookieOptions(true));
 
       console.log(`[AUTH] Free login: ${normalizedEmail}`);
       return response;

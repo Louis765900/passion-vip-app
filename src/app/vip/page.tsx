@@ -230,7 +230,7 @@ export default function VIPPage() {
               <Crown className="w-5 h-5 text-gray-900" />
             </div>
             <span className="font-bold text-xl">
-              Pronosport<span className="text-yellow-400">VIP</span>
+              Prono<span className="text-yellow-400">Scope</span>
             </span>
           </Link>
           <Link
@@ -253,7 +253,7 @@ export default function VIPPage() {
             className="inline-flex items-center gap-2 px-4 py-2 bg-yellow-500/10 border border-yellow-500/30 rounded-full mb-6"
           >
             <Flame className="w-4 h-4 text-yellow-400" />
-            <span className="text-yellow-400 text-sm font-medium">78% de réussite sur les 30 derniers jours</span>
+            <span className="text-yellow-400 text-sm font-medium">Analyses IA avancees - Resultats publics et verifiables</span>
           </motion.div>
 
           <motion.h1
@@ -262,11 +262,11 @@ export default function VIPPage() {
             transition={{ duration: 0.7, delay: 0.1 }}
             className="text-4xl md:text-6xl lg:text-7xl font-black mb-6 leading-tight"
           >
-            Arrêtez de{' '}
-            <span className="text-gray-500 line-through">Parier</span>
+            Arretez de{' '}
+            <span className="text-gray-500 line-through">deviner</span>
             <br />
             <span className="bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 bg-clip-text text-transparent">
-              Investissez.
+              Analysez.
             </span>
           </motion.h1>
 
@@ -276,8 +276,8 @@ export default function VIPPage() {
             transition={{ duration: 0.7, delay: 0.2 }}
             className="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto mb-10"
           >
-            Rejoignez l'élite des parieurs. Notre IA analyse des milliers de données
-            pour vous fournir <span className="text-white font-semibold">1 pick ultra-confiant</span> chaque jour.
+            Beneficiez d'analyses approfondies. Notre IA traite des milliers de donnees
+            pour vous fournir <span className="text-white font-semibold">1 analyse detaillee</span> chaque jour.
           </motion.p>
 
           <motion.div
@@ -290,25 +290,18 @@ export default function VIPPage() {
               href="/login"
               onMouseEnter={() => setIsHovered(true)}
               onMouseLeave={() => setIsHovered(false)}
-              className="relative group inline-flex items-center justify-center gap-3 px-8 py-4 bg-gradient-to-r from-yellow-500 to-amber-500 text-gray-900 font-bold text-lg rounded-xl overflow-hidden transition-all hover:shadow-2xl hover:shadow-yellow-500/30"
+              className="relative group inline-flex items-center justify-center gap-3 px-8 py-4 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold text-lg rounded-xl overflow-hidden transition-all hover:shadow-2xl hover:shadow-green-500/30"
             >
               <motion.div
                 className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -skew-x-12"
                 animate={{ x: isHovered ? '200%' : '-100%' }}
                 transition={{ duration: 0.6 }}
               />
-              <Crown className="w-5 h-5 relative z-10" />
-              <span className="relative z-10">Devenir VIP Maintenant</span>
+              <Gift className="w-5 h-5 relative z-10" />
+              <span className="relative z-10">Acceder Gratuitement</span>
               <ArrowRight className="w-5 h-5 relative z-10 group-hover:translate-x-1 transition-transform" />
             </Link>
 
-            <Link
-              href="#pricing"
-              className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white/5 border border-white/10 text-white font-medium rounded-xl hover:bg-white/10 transition-colors"
-            >
-              Voir les offres
-              <ChevronRight className="w-4 h-4" />
-            </Link>
           </motion.div>
 
           <motion.div
@@ -318,8 +311,8 @@ export default function VIPPage() {
             className="flex flex-wrap items-center justify-center gap-6 mt-10 text-sm text-gray-500"
           >
             <div className="flex items-center gap-2">
-              <Shield className="w-4 h-4 text-green-500" />
-              <span>Paiement sécurisé</span>
+              <Gift className="w-4 h-4 text-green-500" />
+              <span>100% Gratuit</span>
             </div>
             <div className="flex items-center gap-2">
               <Clock className="w-4 h-4 text-yellow-500" />
@@ -337,9 +330,9 @@ export default function VIPPage() {
       <section className="relative z-10 py-16 px-4">
         <div className="max-w-5xl mx-auto">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            <AnimatedStat value="78%" label="Taux de réussite" icon={Target} delay={0} />
-            <AnimatedStat value="2500+" label="Membres actifs" icon={Users} delay={0.1} />
-            <AnimatedStat value="156" label="Picks gagnants (2024)" icon={Trophy} delay={0.2} />
+            <AnimatedStat value="100+" label="Analyses quotidiennes" icon={Target} delay={0} />
+            <AnimatedStat value="4" label="Phases d'analyse IA" icon={BarChart3} delay={0.1} />
+            <AnimatedStat value="15+" label="Ligues suivies" icon={Trophy} delay={0.2} />
             <AnimatedStat value="12" label="Mois d'expertise" icon={Medal} delay={0.3} />
           </div>
         </div>
@@ -390,13 +383,13 @@ export default function VIPPage() {
               <div className="space-y-6">
                 <Feature
                   icon={<ShieldCheck className="w-6 h-6 text-green-400" />}
-                  title="Confiance Safe & Ultra Safe"
-                  desc="Fini les paris au hasard. On ne joue que ce qui est mathématiquement avantageux."
+                  title="Niveaux de Confiance Transparents"
+                  desc="Chaque analyse affiche un niveau de confiance calcule objectivement. Vous decidez en connaissance de cause."
                 />
                 <Feature
                   icon={<TrendingUp className="w-6 h-6 text-blue-400" />}
-                  title="Gestion de Bankroll Intégrée"
-                  desc="Nous vous disons exactement combien miser (1%, 2%, 5%) pour sécuriser vos gains."
+                  title="Gestion de Bankroll Integree"
+                  desc="Kelly Criterion integre pour vous aider a dimensionner vos mises de maniere raisonnee (1%, 2%, 5%)."
                 />
                 <Feature
                   icon={<Crown className="w-6 h-6 text-yellow-400" />}
@@ -416,31 +409,25 @@ export default function VIPPage() {
                 LIVE
               </div>
               <h3 className="text-xl font-bold text-white mb-4">Performance Historique</h3>
-              <div className="text-5xl font-bold text-green-400 mb-2">~78%</div>
-              <p className="text-gray-400 text-sm">Taux de réussite moyen sur les pronostics "Safe" (Cote 1.50+)</p>
-              <div className="mt-6 h-3 w-full bg-gray-700 rounded-full overflow-hidden">
-                <motion.div
-                  initial={{ width: 0 }}
-                  whileInView={{ width: '78%' }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 1.5, ease: "easeOut" }}
-                  className="h-full bg-gradient-to-r from-green-500 to-emerald-400"
-                />
-              </div>
+              <div className="text-xl font-bold text-green-400 mb-2">Suivi en temps reel</div>
+              <p className="text-gray-400 text-sm">Consultez nos statistiques publiques sur la page Stats - totalement transparent.</p>
               <div className="mt-6 grid grid-cols-3 gap-4 text-center">
                 <div>
-                  <div className="text-2xl font-bold text-white">156</div>
-                  <div className="text-xs text-gray-500">Gagnés</div>
+                  <div className="text-2xl font-bold text-blue-400">4</div>
+                  <div className="text-xs text-gray-500">Phases d'analyse</div>
                 </div>
                 <div>
-                  <div className="text-2xl font-bold text-white">44</div>
-                  <div className="text-xs text-gray-500">Perdus</div>
+                  <div className="text-2xl font-bold text-green-400">IA</div>
+                  <div className="text-xs text-gray-500">Perplexity + Tavily</div>
                 </div>
                 <div>
-                  <div className="text-2xl font-bold text-yellow-400">+312%</div>
-                  <div className="text-xs text-gray-500">ROI Total</div>
+                  <div className="text-2xl font-bold text-yellow-400">Kelly</div>
+                  <div className="text-xs text-gray-500">Gestion bankroll</div>
                 </div>
               </div>
+              <p className="mt-4 text-[10px] text-gray-600">
+                * Les performances passees ne garantissent pas les resultats futurs. Consultez /stats pour les chiffres reels.
+              </p>
             </motion.div>
           </div>
         </div>
@@ -483,8 +470,8 @@ export default function VIPPage() {
         </div>
       </section>
 
-      {/* PRICING */}
-      <section id="pricing" className="relative z-10 py-20 px-4">
+      {/* ACCES GRATUIT */}
+      <section id="acces" className="relative z-10 py-20 px-4">
         <div className="max-w-4xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -492,77 +479,111 @@ export default function VIPPage() {
             viewport={{ once: true }}
             className="text-center mb-12"
           >
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-500/20 border border-green-500/30 rounded-full mb-6">
+              <Gift className="w-5 h-5 text-green-400" />
+              <span className="text-green-400 font-bold">100% GRATUIT</span>
+            </div>
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Choisissez votre <span className="text-yellow-400">Accès</span>
+              Acces <span className="text-green-400">Libre et Gratuit</span>
             </h2>
-            <p className="text-gray-400">Investissement unique. Résultats garantis.</p>
+            <p className="text-gray-400 max-w-2xl mx-auto">
+              Ce contenu est entierement gratuit. Nous ne vendons pas de pronostics.
+              Notre mission est de fournir des analyses de qualite accessibles a tous.
+            </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
-            {/* Plan Mensuel */}
-            <motion.div
-              initial={{ opacity: 0, x: -30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              className="relative bg-gray-900/50 backdrop-blur-xl rounded-2xl border border-white/10 p-6"
-            >
-              <h3 className="text-xl font-bold mb-2">Mensuel</h3>
-              <p className="text-gray-400 text-sm mb-4">Parfait pour découvrir</p>
-              <div className="mb-6">
-                <span className="text-4xl font-black text-white">29€</span>
-                <span className="text-gray-400">/mois</span>
-              </div>
-              <ul className="space-y-3 mb-6">
-                {["1 Pick VIP/jour", "Alertes Telegram", "Support 7j/7"].map((item, i) => (
-                  <li key={i} className="flex items-center gap-2 text-sm text-gray-300">
-                    <CheckCircle2 className="w-4 h-4 text-green-400" />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-              <button className="w-full py-3 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl font-medium transition-colors">
-                Commencer
-              </button>
-            </motion.div>
-
-            {/* Plan Annuel - RECOMMANDÉ */}
-            <motion.div
-              initial={{ opacity: 0, x: 30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              className="relative"
-            >
-              <div className="absolute -inset-1 bg-gradient-to-r from-yellow-500/50 via-amber-500/50 to-yellow-500/50 rounded-2xl blur-xl opacity-50" />
-              <div className="relative bg-gradient-to-br from-gray-900 to-gray-800 backdrop-blur-xl rounded-2xl border border-yellow-500/50 p-6 overflow-hidden">
-                <div className="absolute top-0 right-0 px-4 py-1 bg-gradient-to-r from-yellow-500 to-amber-500 text-gray-900 text-xs font-bold rounded-bl-xl">
-                  POPULAIRE
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="max-w-xl mx-auto"
+          >
+            <div className="relative">
+              <div className="absolute -inset-1 bg-gradient-to-r from-green-500/30 via-emerald-500/30 to-green-500/30 rounded-2xl blur-xl opacity-50" />
+              <div className="relative bg-gradient-to-br from-gray-900 to-gray-800 backdrop-blur-xl rounded-2xl border border-green-500/30 p-8 overflow-hidden">
+                <div className="absolute top-0 right-0 px-4 py-1 bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs font-bold rounded-bl-xl">
+                  AUCUN PAIEMENT REQUIS
                 </div>
 
-                <h3 className="text-xl font-bold mb-2 flex items-center gap-2">
-                  <Crown className="w-5 h-5 text-yellow-400" />
-                  Annuel
-                </h3>
-                <p className="text-gray-400 text-sm mb-4">Économisez 40%</p>
-                <div className="mb-6">
-                  <span className="text-4xl font-black text-white">199€</span>
-                  <span className="text-gray-400">/an</span>
-                  <span className="ml-2 text-sm text-gray-500 line-through">348€</span>
+                <div className="text-center mb-6">
+                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-500/20 border-2 border-green-500/30 mb-4">
+                    <Gift className="w-8 h-8 text-green-400" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-white mb-2">Acces Complet Gratuit</h3>
+                  <p className="text-gray-400 text-sm">
+                    Toutes nos analyses IA sont disponibles gratuitement
+                  </p>
                 </div>
+
                 <ul className="space-y-3 mb-6">
-                  {["Tout le plan mensuel", "Discord privé", "Lives hebdo", "Bonus: Formation Bankroll"].map((item, i) => (
+                  {[
+                    "Analyses IA quotidiennes",
+                    "Donnees en temps reel",
+                    "Gestion de bankroll integree",
+                    "Statistiques transparentes",
+                    "Alertes et notifications"
+                  ].map((item, i) => (
                     <li key={i} className="flex items-center gap-2 text-sm text-gray-300">
-                      <CheckCircle2 className="w-4 h-4 text-yellow-400" />
+                      <CheckCircle2 className="w-4 h-4 text-green-400" />
                       {item}
                     </li>
                   ))}
                 </ul>
-                <button className="w-full py-3 bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-400 hover:to-amber-400 text-gray-900 rounded-xl font-bold transition-colors flex items-center justify-center gap-2">
-                  <Sparkles className="w-4 h-4" />
-                  Rejoindre l'élite
-                </button>
+
+                <Link
+                  href="/login"
+                  className="w-full py-3 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-400 hover:to-emerald-400 text-white rounded-xl font-bold transition-colors flex items-center justify-center gap-2"
+                >
+                  <Crown className="w-4 h-4" />
+                  Acceder Gratuitement
+                </Link>
+
+                <p className="text-center text-xs text-gray-500 mt-4">
+                  Aucune carte bancaire requise. Inscription gratuite.
+                </p>
               </div>
+            </div>
+
+            {/* Donation optionnelle */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.3 }}
+              className="mt-8 p-6 bg-white/5 border border-white/10 rounded-xl text-center"
+            >
+              <p className="text-gray-400 text-sm mb-3">
+                Vous appreciez notre travail ? Soutenez le projet (optionnel)
+              </p>
+              <a
+                href="https://buymeacoffee.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-6 py-2.5 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/30 text-amber-400 font-medium rounded-lg transition-colors"
+              >
+                <span>☕</span>
+                Offrir un cafe
+              </a>
+              <p className="text-[11px] text-gray-600 mt-3">
+                Les dons sont entierement volontaires et ne donnent pas acces a du contenu supplementaire.
+              </p>
             </motion.div>
-          </div>
+          </motion.div>
+
+          {/* Disclaimer important */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.4 }}
+            className="mt-10 p-4 bg-blue-900/20 border border-blue-500/20 rounded-xl max-w-2xl mx-auto"
+          >
+            <p className="text-center text-sm text-blue-200/80">
+              <strong className="text-blue-300">Important :</strong> Ce site fournit des analyses a titre informatif uniquement.
+              Nous ne sommes pas un operateur de jeux agree et ne vendons aucun pronostic.
+              Les analyses sont generees par intelligence artificielle et ne constituent pas des conseils financiers.
+            </p>
+          </motion.div>
         </div>
       </section>
 
@@ -575,32 +596,56 @@ export default function VIPPage() {
             viewport={{ once: true }}
           >
             <h2 className="text-3xl md:text-4xl font-bold mb-6">
-              Prêt à rejoindre les <span className="text-yellow-400">gagnants</span> ?
+              Pret a <span className="text-green-400">decouvrir</span> nos analyses ?
             </h2>
             <p className="text-gray-400 mb-8">
-              Ne laissez plus le hasard décider. Faites confiance à l'IA.
+              Accedez gratuitement a des analyses detaillees generees par IA pour eclairer vos decisions.
             </p>
             <Link
               href="/login"
-              className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-yellow-500 to-amber-500 text-gray-900 font-bold text-lg rounded-xl hover:shadow-2xl hover:shadow-yellow-500/30 transition-all"
+              className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold text-lg rounded-xl hover:shadow-2xl hover:shadow-green-500/30 transition-all"
             >
-              <Crown className="w-5 h-5" />
-              Commencer maintenant
+              <Gift className="w-5 h-5" />
+              S'inscrire gratuitement
               <ArrowRight className="w-5 h-5" />
             </Link>
           </motion.div>
         </div>
       </section>
 
+      {/* Avertissement legal */}
+      <section className="relative z-10 py-6 px-4 bg-gradient-to-r from-amber-900/20 via-red-900/20 to-amber-900/20 border-y border-amber-500/20">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex flex-col md:flex-row items-center justify-center gap-4 text-center md:text-left">
+            <div className="flex items-center gap-2 bg-red-500/20 px-4 py-2 rounded-full">
+              <span className="text-red-400 font-bold text-lg">18+</span>
+            </div>
+            <div className="text-sm text-amber-200/90">
+              <p className="font-semibold">Jouer comporte des risques : endettement, isolement, dependance.</p>
+              <p className="mt-1 flex flex-wrap items-center justify-center md:justify-start gap-2">
+                Appelez le <a href="tel:0974751313" className="text-amber-300 font-medium underline">09 74 75 13 13</a> (appel non surtaxe)
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Footer */}
       <footer className="relative z-10 py-8 px-4 border-t border-white/5">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-gray-500">
-          <p>© 2025 Pronosport VIP. Tous droits réservés.</p>
-          <div className="flex items-center gap-6">
-            <a href="#" className="hover:text-white transition-colors">Conditions</a>
-            <a href="#" className="hover:text-white transition-colors">Confidentialité</a>
-            <a href="#" className="hover:text-white transition-colors">Contact</a>
+        <div className="max-w-6xl mx-auto">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-gray-500 mb-4">
+            <p>© 2025 PronoScope. Tous droits reserves.</p>
+            <div className="flex items-center gap-6">
+              <Link href="/mentions-legales" className="hover:text-white transition-colors">Mentions legales</Link>
+              <Link href="/cgu" className="hover:text-white transition-colors">CGU</Link>
+              <Link href="/confidentialite" className="hover:text-white transition-colors">Confidentialite</Link>
+              <Link href="/jeu-responsable" className="hover:text-white transition-colors">Jeu responsable</Link>
+            </div>
           </div>
+          <p className="text-center text-xs text-gray-600 max-w-2xl mx-auto">
+            Site entierement gratuit. Nous ne vendons pas de pronostics. Les analyses sont fournies a titre informatif uniquement.
+            Les performances passees ne garantissent pas les resultats futurs. Ce site n'est pas un operateur de jeux agree. Pariez de maniere responsable.
+          </p>
         </div>
       </footer>
     </div>

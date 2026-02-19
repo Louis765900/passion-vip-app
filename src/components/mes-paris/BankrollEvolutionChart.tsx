@@ -28,9 +28,8 @@ export default function BankrollEvolutionChart() {
         const response = await fetch('/api/stats/bankroll')
         if (response.ok) {
           const result = await response.json()
-          // Les donnees viennent en ordre inverse (plus recent en premier)
-          // On les inverse pour l'affichage chronologique
-          const sortedData = Array.isArray(result) ? [...result].reverse() : []
+          // L'API retourne deja en ordre chronologique
+          const sortedData = Array.isArray(result) ? result : []
           setData(sortedData)
         }
       } catch (error) {
