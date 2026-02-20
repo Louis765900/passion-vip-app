@@ -9,7 +9,7 @@ interface UsePronosticReturn {
   error: string | null
   currentPronostic: PronosticResponse | null
   selectedMatch: Match | null
-  generatePronostic: (match: Match) => Promise<void>
+  generatePronostic: (match: Match, forceRefresh?: boolean) => Promise<void>
   clearPronostic: () => void
 }
 
@@ -20,7 +20,7 @@ export function usePronostic(): UsePronosticReturn {
   const [currentPronostic, setCurrentPronostic] = useState<PronosticResponse | null>(null)
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null)
 
-  const generatePronostic = useCallback(async (match: Match) => {
+  const generatePronostic = useCallback(async (match: Match, forceRefresh = false) => {
     if (!match || !match.homeTeam || !match.awayTeam) {
       setError('Données du match invalides')
       return
@@ -39,7 +39,7 @@ export function usePronostic(): UsePronosticReturn {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ match }),
+        body: JSON.stringify({ match, forceRefresh }),
       })
 
       let data: APIPronosticResponse

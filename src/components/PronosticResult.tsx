@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   X, TrendingUp, TrendingDown, AlertTriangle, Target,
   Brain, Users, Zap, Shield, Ticket, BarChart3, FileText,
-  CheckCircle2, DollarSign, Percent, Cloud, Gavel
+  CheckCircle2, DollarSign, Percent, Cloud, Gavel, RefreshCw
 } from 'lucide-react'
 import { Match, PronosticResponse, getTeamColor, getTeamInitials } from '@/types'
 import { RadarStats, H2HBar, EVGauge } from './charts'
@@ -17,6 +17,7 @@ interface PronosticResultProps {
   match: Match
   pronostic: PronosticResponse
   onClose: () => void
+  onRefresh?: () => void
 }
 
 type TabId = 'synthese' | 'stats' | 'tickets'
@@ -36,7 +37,7 @@ function TeamLogo({ teamName, size = 'sm' }: { teamName: string; size?: 'sm' | '
   )
 }
 
-export default function PronosticResult({ match, pronostic, onClose }: PronosticResultProps) {
+export default function PronosticResult({ match, pronostic, onClose, onRefresh }: PronosticResultProps) {
   const [activeTab, setActiveTab] = useState<TabId>('synthese')
 
   const tabs: { id: TabId; label: string; icon: React.ReactNode }[] = [
@@ -90,12 +91,23 @@ export default function PronosticResult({ match, pronostic, onClose }: Pronostic
                   </div>
                 </div>
               </div>
-              <button
-                onClick={onClose}
-                className="p-2 hover:bg-white/10 rounded-lg transition-colors flex-shrink-0 min-w-[40px] min-h-[40px] flex items-center justify-center"
-              >
-                <X className="w-5 h-5 text-white/70" />
-              </button>
+              <div className="flex items-center gap-1 flex-shrink-0">
+                {onRefresh && (
+                  <button
+                    onClick={onRefresh}
+                    title="Regénérer l'analyse (efface le cache)"
+                    className="p-2 hover:bg-white/10 rounded-lg transition-colors min-w-[40px] min-h-[40px] flex items-center justify-center"
+                  >
+                    <RefreshCw className="w-4 h-4 text-white/40 hover:text-amber-400 transition-colors" />
+                  </button>
+                )}
+                <button
+                  onClick={onClose}
+                  className="p-2 hover:bg-white/10 rounded-lg transition-colors min-w-[40px] min-h-[40px] flex items-center justify-center"
+                >
+                  <X className="w-5 h-5 text-white/70" />
+                </button>
+              </div>
             </div>
 
             {/* Tabs */}
@@ -176,13 +188,13 @@ export default function PronosticResult({ match, pronostic, onClose }: Pronostic
                       <div className="text-xl md:text-2xl font-bold text-yellow-400">
                         {pronostic.predictions.btts_prob}%
                       </div>
-                      <span className="text-[10px] md:text-xs text-white/60">BTTS (Les 2 marquent)</span>
+                      <span className="text-[10px] md:text-xs text-white/60">Les deux équipes marquent</span>
                     </div>
                     <div className="bg-white/[0.04] rounded-[14px] border border-white/[0.06] p-3 md:p-4 text-center">
                       <div className="text-xl md:text-2xl font-bold text-blue-400">
                         {pronostic.predictions.over_2_5_prob}%
                       </div>
-                      <span className="text-[10px] md:text-xs text-white/60">Over 2.5 Buts</span>
+                      <span className="text-[10px] md:text-xs text-white/60">Plus de 2.5 buts</span>
                     </div>
                   </div>
 
@@ -281,9 +293,9 @@ export default function PronosticResult({ match, pronostic, onClose }: Pronostic
                             <div className="flex items-center gap-2 md:gap-3 min-w-0">
                               <AlertTriangle
                                 className={`w-4 h-4 flex-shrink-0 ${
-                                  player.importance === 'High'
+                                  player.importance === 'High' || player.importance === 'Élevée'
                                     ? 'text-red-400'
-                                    : player.importance === 'Medium'
+                                    : player.importance === 'Medium' || player.importance === 'Moyenne'
                                     ? 'text-yellow-400'
                                     : 'text-gray-400'
                                 }`}
@@ -295,9 +307,9 @@ export default function PronosticResult({ match, pronostic, onClose }: Pronostic
                             </div>
                             <span
                               className={`px-2 py-1 text-[10px] md:text-xs rounded-full flex-shrink-0 ${
-                                player.importance === 'High'
+                                player.importance === 'High' || player.importance === 'Élevée'
                                   ? 'bg-red-500/20 text-red-300'
-                                  : player.importance === 'Medium'
+                                  : player.importance === 'Medium' || player.importance === 'Moyenne'
                                   ? 'bg-yellow-500/20 text-yellow-300'
                                   : 'bg-gray-500/20 text-gray-300'
                               }`}
@@ -326,7 +338,7 @@ export default function PronosticResult({ match, pronostic, onClose }: Pronostic
                   {(pronostic.vip_tickets?.fun?.ev_value != null && pronostic.vip_tickets.fun.ev_value > 0) && (
                     <EVGauge
                       evValue={pronostic.vip_tickets.fun.ev_value}
-                      label="Expected Value - Ticket FUN"
+                      label="Valeur Espérée — Ticket FUN"
                     />
                   )}
 
@@ -407,7 +419,7 @@ export default function PronosticResult({ match, pronostic, onClose }: Pronostic
                             <TrendingUp className="w-3 h-3 md:w-4 md:h-4" />
                             <span className="text-xl md:text-2xl font-bold">+{(pronostic.vip_tickets.fun.ev_value ?? 0).toFixed(1)}%</span>
                           </div>
-                          <span className="text-[10px] md:text-xs text-white/50">Expected Value</span>
+                          <span className="text-[10px] md:text-xs text-white/50">Valeur Espérée</span>
                         </div>
                       )}
                     </div>

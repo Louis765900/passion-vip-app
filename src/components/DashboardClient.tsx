@@ -760,7 +760,12 @@ export function DashboardClient() {
       {/* ── PRONOSTIC MODAL ─────────────────────────────────────── */}
       <AnimatePresence>
         {currentPronostic && selectedMatch && (
-          <PronosticResult match={selectedMatch} pronostic={currentPronostic} onClose={clearPronostic} />
+          <PronosticResult
+            match={selectedMatch}
+            pronostic={currentPronostic}
+            onClose={clearPronostic}
+            onRefresh={() => generatePronostic(selectedMatch, true)}
+          />
         )}
       </AnimatePresence>
     </>
