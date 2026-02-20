@@ -27,10 +27,25 @@ const STAT_LABELS: Record<keyof TeamRadarStats, string> = {
 }
 
 export function RadarStats({ homeTeam, awayTeam, homeStats, awayStats }: RadarStatsProps) {
+  // Guard : si les stats sont absentes ou mal formées, afficher un placeholder
+  if (!homeStats || !awayStats) {
+    return (
+      <div className="w-full bg-dark-800/50 rounded-xl p-4 flex items-center justify-center h-[280px]">
+        <p className="text-white/40 text-sm">Stats non disponibles pour ce match</p>
+      </div>
+    )
+  }
+
+  // Forcer des valeurs numériques (l'IA peut renvoyer des strings)
+  const toNum = (v: unknown): number => {
+    const n = Number(v)
+    return isFinite(n) && n >= 0 ? Math.min(n, 100) : 50
+  }
+
   const data = (Object.keys(STAT_LABELS) as (keyof TeamRadarStats)[]).map((key) => ({
     stat: STAT_LABELS[key],
-    home: homeStats[key],
-    away: awayStats[key],
+    home: toNum(homeStats[key]),
+    away: toNum(awayStats[key]),
     fullMark: 100,
   }))
 

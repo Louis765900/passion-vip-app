@@ -9,11 +9,15 @@ interface H2HBarProps {
   awayTeam: string
 }
 
-const RESULT_CONFIG: Record<H2HResult, { color: string; label: string }> = {
+// Supporte W/D/L (anglais) ET V/N/D (français) renvoyés par l'IA
+const RESULT_CONFIG: Record<string, { color: string; label: string }> = {
   W: { color: 'bg-green-500', label: 'V' },
+  V: { color: 'bg-green-500', label: 'V' },
   D: { color: 'bg-orange-500', label: 'N' },
+  N: { color: 'bg-orange-500', label: 'N' },
   L: { color: 'bg-red-500', label: 'D' },
 }
+const RESULT_FALLBACK = { color: 'bg-gray-600', label: '?' }
 
 export function H2HBar({ history, homeTeam, awayTeam }: H2HBarProps) {
   return (
@@ -24,7 +28,9 @@ export function H2HBar({ history, homeTeam, awayTeam }: H2HBarProps) {
 
       {/* Visual Results Bar */}
       <div className="flex justify-center gap-2 mb-4">
-        {history.results.map((result, index) => (
+        {(history?.results ?? []).map((result, index) => {
+          const cfg = RESULT_CONFIG[result] ?? RESULT_FALLBACK
+          return (
           <motion.div
             key={index}
             initial={{ scale: 0, opacity: 0 }}
@@ -33,16 +39,17 @@ export function H2HBar({ history, homeTeam, awayTeam }: H2HBarProps) {
             className={`
               w-10 h-10 rounded-lg flex items-center justify-center
               font-bold text-white shadow-lg
-              ${RESULT_CONFIG[result].color}
+              ${cfg.color}
             `}
             title={`Match ${index + 1}: ${
-              result === 'W' ? `Victoire ${homeTeam}` :
+              result === 'W' || result === 'V' ? `Victoire ${homeTeam}` :
               result === 'L' ? `Victoire ${awayTeam}` : 'Match Nul'
             }`}
           >
-            {RESULT_CONFIG[result].label}
+            {cfg.label}
           </motion.div>
-        ))}
+        )})}
+
       </div>
 
       {/* Stats Summary */}

@@ -78,7 +78,7 @@ export interface TeamRadarStats {
 }
 
 // Historique H2H (5 derniers matchs)
-export type H2HResult = 'W' | 'D' | 'L' // Win, Draw, Loss (du point de vue domicile)
+export type H2HResult = 'W' | 'D' | 'L' | 'V' | 'N' // W/D/L (anglais) ou V/N/D (français IA)
 
 export interface H2HHistory {
   results: H2HResult[] // 5 derniers résultats

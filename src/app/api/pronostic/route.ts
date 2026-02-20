@@ -392,12 +392,37 @@ function validateAndNormalize(pronostic: any) {
     pronostic.vip_tickets.fun = { ...pronostic.vip_tickets.fun, bankroll_percent: 2 }
   }
 
+  // Normaliser les stats en nombres (l'IA peut renvoyer des strings)
+  const toStatNum = (v: unknown): number => {
+    const n = Number(v)
+    return isFinite(n) && n >= 0 ? Math.min(Math.round(n), 100) : 50
+  }
+  const normalizeStats = (s: any) => ({
+    attack: toStatNum(s?.attack),
+    defense: toStatNum(s?.defense),
+    form: toStatNum(s?.form),
+    morale: toStatNum(s?.morale),
+    h2h: toStatNum(s?.h2h),
+  })
   const defaultStats = { attack: 50, defense: 50, form: 50, morale: 50, h2h: 50 }
-  if (!pronostic.analysis.home_team_stats) pronostic.analysis.home_team_stats = defaultStats
-  if (!pronostic.analysis.away_team_stats) pronostic.analysis.away_team_stats = defaultStats
+  pronostic.analysis.home_team_stats = pronostic.analysis.home_team_stats
+    ? normalizeStats(pronostic.analysis.home_team_stats)
+    : defaultStats
+  pronostic.analysis.away_team_stats = pronostic.analysis.away_team_stats
+    ? normalizeStats(pronostic.analysis.away_team_stats)
+    : defaultStats
 
+  // Normaliser les résultats H2H : accepter W/D/L ET V/N/D, mapper tout en V/N/D pour l'affichage
+  const H2H_MAP: Record<string, 'V' | 'N' | 'D'> = {
+    W: 'V', V: 'V',
+    D: 'N', N: 'N',
+    L: 'D',
+  }
   if (!pronostic.analysis.h2h_history) {
     pronostic.analysis.h2h_history = { results: ['N', 'N', 'N', 'N', 'N'], home_wins: 0, draws: 5, away_wins: 0 }
+  } else if (Array.isArray(pronostic.analysis.h2h_history.results)) {
+    pronostic.analysis.h2h_history.results = pronostic.analysis.h2h_history.results
+      .map((r: string) => H2H_MAP[r] ?? 'N')
   }
 
   return pronostic
